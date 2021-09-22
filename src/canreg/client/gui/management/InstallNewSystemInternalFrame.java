@@ -29,17 +29,18 @@ import canreg.client.CanRegClientApp;
 import canreg.client.LocalSettings;
 import canreg.client.gui.tools.WaitFrame;
 import canreg.client.gui.tools.globalpopup.TechnicalError;
+import canreg.common.CreateDefaultConfigFile;
 import canreg.common.Globals;
 import canreg.exceptions.WrongCanRegVersionException;
 import canreg.server.management.SystemDescription;
 import java.io.File;
-// import java.io.FileFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.security.auth.login.LoginException;
@@ -169,6 +170,8 @@ public class InstallNewSystemInternalFrame extends javax.swing.JInternalFrame {
                 } else {
                     JOptionPane.showInternalMessageDialog(CanRegClientApp.getApplication().getMainFrame().getContentPane(), fileNameWithPath + java.util.ResourceBundle.getBundle("canreg/client/gui/management/resources/InstallNewSystemInternalFrame").getString(" IS ALREADY IN THE SYSTEM FOLDER. NO NEED TO COPY."), java.util.ResourceBundle.getBundle("canreg/client/gui/management/resources/InstallNewSystemInternalFrame").getString("MESSAGE."), JOptionPane.WARNING_MESSAGE);
                 }
+                //Create a config file to store password and username from harcoded code 
+                new CreateDefaultConfigFile().writeDefaultConfigFile();
                 // load the document
                 loadDocument(document);
                 // Add this new server to the list of favourite servers
@@ -355,7 +358,11 @@ public class InstallNewSystemInternalFrame extends javax.swing.JInternalFrame {
             // log in as default user
             // String serverObjectString = "rmi://" + Globals.DEFAULT_SERVER_ADDRESS + ":" + Globals.DEFAULT_PORT + "/CanRegLogin" + systemDescription.getRegistryCode();
             try {
-                String canRegSystemName = CanRegClientApp.getApplication().loginDirect(systemDescription.getRegistryCode(), "morten", new char[]{'e', 'r', 'v', 'i', 'k'}, false);
+                Properties properties = new CreateDefaultConfigFile().readConfigFile();
+                CanRegClientApp.getApplication().loginDirect(systemDescription.getRegistryCode(),
+                                                            properties.getProperty("username"),
+                                                            properties.getProperty("password").toCharArray(),
+                                                            false);
             } catch (LoginException | NullPointerException | MalformedURLException | RemoteException | NotBoundException | WrongCanRegVersionException | UnknownHostException ex) {
                LOGGER.log(Level.SEVERE, null, ex);
                 new TechnicalError().errorDialog();
