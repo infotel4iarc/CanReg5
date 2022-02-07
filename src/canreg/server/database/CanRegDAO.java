@@ -792,6 +792,7 @@ public class CanRegDAO {
     }
     
     public boolean connect() throws SQLException, RemoteException {
+
         String dbUrl = getDatabaseUrl();
         try {
             openUniqueConnection(dbUrl);
@@ -810,6 +811,8 @@ public class CanRegDAO {
 
             isConnected = dbConnection != null;
 
+
+            System.err.println(" tabkllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll");
             // Consider moving this function...
             if (isConnected && !tableOfDictionariesFilled) {
                 fillDictionariesTable();
@@ -1093,6 +1096,15 @@ public class CanRegDAO {
         // save tumour before we save the sources...
         try(Connection connection = getDbConnection();
              PreparedStatement stmtSaveNewTumour = connection.prepareStatement(strSaveTumour, Statement.RETURN_GENERATED_KEYS)) {
+
+            ResultSet resultSet = connection.prepareStatement("SELECT * FROM APP.PATIENT").executeQuery();
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+            while(resultSet.next()) {
+                for(int i = 1 ; i < 30 ; i++) {
+                    LOGGER.info(resultSetMetaData.getColumnName(i) + " = " + resultSet.getObject(i));
+                }
+            }
+
             int id = saveRecord(Globals.TUMOUR_TABLE_NAME, tumour, stmtSaveNewTumour);
 
             Set<Source> sources = tumour.getSources();
@@ -1164,6 +1176,9 @@ public class CanRegDAO {
 
             int rowCount = stmtSaveNewDictionary.executeUpdate();
             ResultSet results = stmtSaveNewDictionary.getResultSet();
+            if(results == null) {
+                results = stmtSaveNewDictionary.getGeneratedKeys();
+            }
             if (results.next()) {
                 id = results.getInt(1);
             }
@@ -1202,6 +1217,9 @@ public class CanRegDAO {
 
             int rowCount = stmtSaveNewDictionaryEntry.executeUpdate();
             ResultSet results = stmtSaveNewDictionaryEntry.getResultSet();
+            if(results == null) {
+                results = stmtSaveNewDictionaryEntry.getGeneratedKeys();
+            }
             if (results.next()) {
                 id = results.getInt(1);
             }
@@ -1275,6 +1293,9 @@ public class CanRegDAO {
 
             int rowCount = stmtSaveNewPopoulationDatasetsEntry.executeUpdate();
             ResultSet results = stmtSaveNewPopoulationDatasetsEntry.getResultSet();
+            if(results == null) {
+                results = stmtSaveNewPopoulationDatasetsEntry.getGeneratedKeys();
+            }
             if (results.next()) {
                 id = results.getInt(1);
             }
