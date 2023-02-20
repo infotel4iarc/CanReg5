@@ -1,5 +1,6 @@
 package canreg.client.gui.dataentry2;
 
+import canreg.common.Globals;
 import canreg.common.database.DatabaseRecord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +11,7 @@ import javax.swing.event.ListSelectionListener;
 import org.jdesktop.application.Action;
 
 /**
- *
+ * A simple JDialog window to select a Tumour from a list of Tumours.
  * @author c_chen
  */
 public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog {
@@ -32,17 +33,19 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
         jButton1.setText("Ok");
         
         ArrayList<String> tumoursList = new ArrayList<>();
+        // read and store data from the tumours passed in args
         tumours.forEach(tumour -> {
             DatabaseRecord a = tumour.getDatabaseRecord();
-            String tumorRecordNumber = a.getVariableAsString("tumourid");
-            String tumorTableId = a.getVariableAsString("patientrecordidtumourtable");
+            String tumorRecordNumber = a.getVariableAsString(String.valueOf(Globals.StandardVariableNames.TumourID));
+            String tumorTableId = a.getVariableAsString(String.valueOf(Globals.StandardVariableNames.PatientRecordIDTumourTable));
             if (tumorRecordNumber.length() != 0) {
                 int tumorNumber = Integer.parseInt(tumorRecordNumber.substring(tumorTableId.length()));
                 tumoursList.add("Tumour "+tumorNumber);
                 mapTumourNumberDisplayed_tumourId.put(tumorNumber, tumorRecordNumber);
             }
         });
-        
+
+        // initialize the selection list
         jList1.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = tumoursList.toArray(new String[0]);
             public int getSize() { return strings.length; }
@@ -52,7 +55,10 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
         listSelectionModel.addListSelectionListener(new SharedListSelectionHandler());
         setVisible(true);
     }
-    
+
+    /**
+     * ListSelectionListener to keep track of which Tumour has been selected
+     */
     class SharedListSelectionHandler implements ListSelectionListener {
         public void valueChanged(ListSelectionEvent e) { 
             ListSelectionModel lsm = (ListSelectionModel)e.getSource();
@@ -60,20 +66,22 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
             if (lsm.isSelectionEmpty()) {
                 selectedValue = "none";
             } else {
-                // Find out which indexes are selected.
+                // Find out which index is selected
                 int minIndex = lsm.getMinSelectionIndex();
                 int maxIndex = lsm.getMaxSelectionIndex();
                 for (int i = minIndex; i <= maxIndex; i++) {
                     if (lsm.isSelectedIndex(i)) {
                         selectedValue = "" + jList1.getSelectedValue().substring("Tumour ".length());
-                        System.out.print("SELECTED: ");
-                        System.out.println(selectedValue);
                     }
                 }
             }
         }
     }
-    
+
+    /** returns the selected value
+     * returns "none" if no value was selected
+     * @return id of the selected tumour
+     */
     public String getValidatedTumourId() {
         return this.validatedValue;
     }
@@ -121,10 +129,7 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
 
     @Action
     public void validateTumour() {
-        System.out.println("OK BUTTON PRESSED");
         this.validatedValue = mapTumourNumberDisplayed_tumourId.get(Integer.valueOf(this.selectedValue));
-        System.out.print("FROM SELECTOR: ");
-        System.out.println(this.validatedValue);
         this.dispose();
     }
 
