@@ -23,7 +23,7 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
     String selectedValue;
     String validatedValue;
     HashMap<Integer, String> mapTumourNumberDisplayed_tumourId;
-    
+
     // enum of the dictionaries used in this class
     enum Dictionaries {
         behavior(5),
@@ -63,7 +63,7 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
             String tumorTableId = databaseRecord.getVariableAsString(String.valueOf(Globals.StandardVariableNames.PatientRecordIDTumourTable));
             // Globals.StandardVariableNames.IncidenceDate doesn't exist in the database record
             String incidDate = databaseRecord.getVariableAsString("incid");
-            
+
             String behaviorDictionaryEntry = databaseRecord.getVariableAsString("beh");
             String morphologyDictionaryEntry = databaseRecord.getVariableAsString("mor");
             String topographyDictionaryEntry = databaseRecord.getVariableAsString("top");
@@ -98,7 +98,7 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
                 return tip;
             }
         };
-        
+
         jTable1.setFont(new Font("Segoe UI", 0, 18));
         jTable1.setRowHeight(30);
         jScrollPane1.setViewportView(jTable1);

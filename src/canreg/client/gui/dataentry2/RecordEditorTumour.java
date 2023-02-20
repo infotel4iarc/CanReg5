@@ -343,8 +343,8 @@ public class RecordEditorTumour extends javax.swing.JPanel
         }
 
         Tumour tumour = (Tumour) databaseRecord;
-        this.setSources(tumour.getSources()); // génération des sources de la tumeur
-        refreshSequence(); // rafraichir la case "sequence"
+        this.setSources(tumour.getSources());
+        refreshSequence();
         refreshObsoleteStatus(databaseRecord);
         refreshRecordStatus(databaseRecord);
         refreshCheckStatus(databaseRecord);
@@ -415,7 +415,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
         return autoFillList;
     }
     
-    public void setSources(Set<Source> sources) { // génération des sources
+    public void setSources(Set<Source> sources) {
         if (sources == null) 
             sources = Collections.synchronizedSet(new LinkedHashSet<Source>());
         
@@ -423,8 +423,8 @@ public class RecordEditorTumour extends javax.swing.JPanel
             sources.add(new Source());
         
         this.sources = sources;
-        buildTabs(); // générer les onglets des sources et leur contenu
-        refreshTitles(); // Renommer les onglets des sources (numérotation)
+        buildTabs();
+        refreshTitles();
     }
     
     public Set<Source> getSources() {        
@@ -456,7 +456,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
     public void moveSourceAction() {
         LinkedList<RecordEditorTumour> tumours = this.patient.getTumours();
         HashMap<String, Source> allSources = new HashMap<>();
-        
+
         for (RecordEditorTumour ret : tumours) {
             ret.sources.forEach(source -> {
                 allSources.put(source.getVariable("sourcerecordid").toString(),source);
@@ -464,9 +464,9 @@ public class RecordEditorTumour extends javax.swing.JPanel
         }
 
         // pour afficher une fenetre supplémentaire
-        RecordEditorSourceSelectorInternalFrame selector = 
+        RecordEditorSourceSelectorInternalFrame selector =
                 new RecordEditorSourceSelectorInternalFrame(
-                        tumours, 
+                        tumours,
                         this.getDatabaseRecord().getVariableAsString(String.valueOf(Globals.StandardVariableNames.TumourID)));
         ((JDialog)selector).addWindowListener(new WindowAdapter() {
             @Override
@@ -504,7 +504,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
                     targetedTumour.sources.add(selectedSource);
                     targetedTumour.setSources(targetedTumour.sources);
                     refreshTitles();
-                    
+
                     // if no more source is left for current Tumour
                     if (sources.isEmpty()) {
                         addSourceAction();
@@ -979,7 +979,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
 
     /**
      * Set the "Check" button to match the status of the "resultCode" and update the dropdown list in the "Record status" area
-     * @param resultCode 
+     * @param resultCode
      */
     public void setChecksResultCode(ResultCode resultCode) {
         this.resultCode = resultCode;
