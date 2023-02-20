@@ -29,9 +29,9 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
         behavior(5),
         morphology(4),
         topography(3);
-        
+
         private final int dictionaryId;
-        
+
         Dictionaries(int id) {
             this.dictionaryId = id;
         }
@@ -105,6 +105,7 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
         jPanel1.add(jScrollPane1);
         listSelectionModel = jTable1.getSelectionModel();
         listSelectionModel.addListSelectionListener(new SharedListSelectionHandler());
+        setVisible(true);
     }
 
     /**
