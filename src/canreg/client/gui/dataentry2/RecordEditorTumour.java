@@ -500,7 +500,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
                     targetedTumour.sources.add(selectedSource);
                     targetedTumour.setSources(targetedTumour.sources);
                     refreshTitles();
-
+                    
                     // if no more source is left for current Tumour
                     if (sources.isEmpty()) {
                         addSourceAction();
