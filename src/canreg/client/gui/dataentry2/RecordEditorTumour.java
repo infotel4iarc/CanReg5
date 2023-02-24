@@ -88,7 +88,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
     private final panelTypes panelType = panelTypes.TUMOUR;
     private DatabaseVariablesListElement[] variablesInTable;
     private Map<String, VariableEditorPanelInterface> variableEditorPanels;
-    private Map<Integer, Dictionary> dictionary;
+    public Map<Integer, Dictionary> dictionary;
     private DatabaseGroupsListElement[] groupListElements;
     private final GlobalToolBox globalToolBox;
     private boolean hasChanged = false;
@@ -122,15 +122,15 @@ public class RecordEditorTumour extends javax.swing.JPanel
     private String recordStatusBeforeChanges;
     //The patient to which this tumour is linked to
     private RecordEditorPatient patient;
-    private final LocalSettings localSettings;    
-    
+    private final LocalSettings localSettings;
+
     
     public RecordEditorTumour(ActionListener listener, 
                               RecordEditorMainFrame recordEditor) {
         this.recordEditor = recordEditor;
         this.actionListener = listener;
         this.localSettings = CanRegClientApp.getApplication().getLocalSettings();
-        initComponents(); 
+        initComponents();
 
         this.changesMap = new HashMap<VariableEditorPanel, Boolean>();
         globalToolBox = CanRegClientApp.getApplication().getGlobalToolBox();
@@ -343,8 +343,8 @@ public class RecordEditorTumour extends javax.swing.JPanel
         }
 
         Tumour tumour = (Tumour) databaseRecord;
-        this.setSources(tumour.getSources());
-        refreshSequence();
+        this.setSources(tumour.getSources()); // génération des sources de la tumeur
+        refreshSequence(); // rafraichir la case "sequence"
         refreshObsoleteStatus(databaseRecord);
         refreshRecordStatus(databaseRecord);
         refreshCheckStatus(databaseRecord);
@@ -415,7 +415,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
         return autoFillList;
     }
     
-    public void setSources(Set<Source> sources) {
+    public void setSources(Set<Source> sources) { // génération des sources
         if (sources == null) 
             sources = Collections.synchronizedSet(new LinkedHashSet<Source>());
         
@@ -423,8 +423,8 @@ public class RecordEditorTumour extends javax.swing.JPanel
             sources.add(new Source());
         
         this.sources = sources;
-        buildTabs();
-        refreshTitles();
+        buildTabs(); // générer les onglets des sources et leur contenu
+        refreshTitles(); // Renommer les onglets des sources (numérotation)
     }
     
     public Set<Source> getSources() {        
@@ -436,7 +436,11 @@ public class RecordEditorTumour extends javax.swing.JPanel
         }
         return sources;
     }
-    
+
+    public Map<Integer, Dictionary> getDictionary() {
+        return dictionary;
+    }
+
     private void buildTabs() {
         sourcesTabbedPane.removeAll();
         for (Source source : sources) {
@@ -460,7 +464,10 @@ public class RecordEditorTumour extends javax.swing.JPanel
         }
 
         // pour afficher une fenetre supplémentaire
-        RecordEditorSourceSelectorInternalFrame selector = new RecordEditorSourceSelectorInternalFrame(tumours);
+        RecordEditorSourceSelectorInternalFrame selector = 
+                new RecordEditorSourceSelectorInternalFrame(
+                        tumours, 
+                        this.getDatabaseRecord().getVariableAsString(String.valueOf(Globals.StandardVariableNames.TumourID)));
         ((JDialog)selector).addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -509,6 +516,8 @@ public class RecordEditorTumour extends javax.swing.JPanel
                 }
             }
         });
+        selector.setModal(true);
+        selector.setVisible( true );
     }
 
     // button "Add Source"
@@ -1345,11 +1354,11 @@ public class RecordEditorTumour extends javax.swing.JPanel
         jPanel9.add(filler7);
 
         moveSourceRecordButton.setAction(actionMap.get("moveSourceAction")); // NOI18N
-        moveSourceRecordButton.setText("Move Source");
+        moveSourceRecordButton.setText("Copy Source");
         moveSourceRecordButton.setMaximumSize(new java.awt.Dimension(220, 23));
         moveSourceRecordButton.setMinimumSize(new java.awt.Dimension(21, 23));
         moveSourceRecordButton.setName("copySourceAction"); // NOI18N
-        moveSourceRecordButton.setPreferredSize(new java.awt.Dimension(139, 35));
+        moveSourceRecordButton.setPreferredSize(new java.awt.Dimension(150, 22));
         jPanel9.add(moveSourceRecordButton);
         jPanel9.add(filler8);
 
@@ -1384,7 +1393,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(449, Short.MAX_VALUE))
+                .addContainerGap(432, Short.MAX_VALUE))
         );
 
         jPanel7.add(jPanel8);
