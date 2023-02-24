@@ -68,9 +68,9 @@ public class RecordEditorSourceSelectorInternalFrame extends javax.swing.JDialog
             String morphologyDictionaryEntry = databaseRecord.getVariableAsString("mor");
             String topographyDictionaryEntry = databaseRecord.getVariableAsString("top");
 
-            String behaviorStringValue = (behaviorDictionaryEntry.equals("")) ? "" : tumour.dictionary.get(Dictionaries.behavior.getDictId()).getDictionaryEntry(behaviorDictionaryEntry).toString();
-            String morphologyStringValue = (morphologyDictionaryEntry.equals("")) ? "" : tumour.dictionary.get(Dictionaries.morphology.getDictId()).getDictionaryEntry(morphologyDictionaryEntry).toString();
-            String topographyStringValue = (topographyDictionaryEntry.equals("")) ? "" : tumour.dictionary.get(Dictionaries.topography.getDictId()).getDictionaryEntry(topographyDictionaryEntry).toString();
+            String behaviorStringValue = (behaviorDictionaryEntry.equals("")) ? "" : tumour.getDictionary().get(Dictionaries.behavior.getDictId()).getDictionaryEntry(behaviorDictionaryEntry).toString();
+            String morphologyStringValue = (morphologyDictionaryEntry.equals("")) ? "" : tumour.getDictionary().get(Dictionaries.morphology.getDictId()).getDictionaryEntry(morphologyDictionaryEntry).toString();
+            String topographyStringValue = (topographyDictionaryEntry.equals("")) ? "" : tumour.getDictionary().get(Dictionaries.topography.getDictId()).getDictionaryEntry(topographyDictionaryEntry).toString();
 
             if (tumourRecordNumber.length() != 0) {
                 int tumourNumber = Integer.parseInt(tumourRecordNumber.substring(tumorTableId.length()));

@@ -88,7 +88,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
     private final panelTypes panelType = panelTypes.TUMOUR;
     private DatabaseVariablesListElement[] variablesInTable;
     private Map<String, VariableEditorPanelInterface> variableEditorPanels;
-    public Map<Integer, Dictionary> dictionary;
+    private Map<Integer, Dictionary> dictionary;
     private DatabaseGroupsListElement[] groupListElements;
     private final GlobalToolBox globalToolBox;
     private boolean hasChanged = false;
