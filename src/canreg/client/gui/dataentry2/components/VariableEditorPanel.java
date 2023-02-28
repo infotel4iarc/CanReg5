@@ -58,13 +58,22 @@ public class VariableEditorPanel extends javax.swing.JPanel
     protected ActionListener listener;
 
     // attributes used for undo/redo purpose
-    protected UndoManager undoManager = new UndoManager();
-    private UndoAction undoAction = null;
-    private RedoAction redoAction = null;
-    protected UndoHandler undoHandler = new UndoHandler();
+    private UndoAction undoAction;
+    private RedoAction redoAction;
+    protected UndoHandler undoHandler;
+    protected UndoManager undoManager;
 
-    // undoListener is not initialised in the constructor. If it was initialised here, the initial value of the
-    // field would be undo-able
+    /**
+     *  The undoListener is not initialised in the constructor:
+     *  If it was initialised there, the document the listener's listening will be overwritten later, thus making it pointless
+     *
+     *  The initUndoListener() method is launched twice in the code:
+     *    - once in setMaximumLength => activate the undo/redo feature on the form field
+     *    - once in setInitialValue => re-initialise the UndoManager to disable initial value of the field from being undone
+     *
+     *  As setInitialValue is only triggered in the patient information edition, the re-initialisation is only occurring
+     *  if the user opens an existing patient record.
+      */
     public VariableEditorPanel() {
         initComponents();
     }
@@ -217,8 +226,9 @@ public class VariableEditorPanel extends javax.swing.JPanel
     
     protected void setMaximumLength(int length) {
         this.maxLength = length;
-        if (this.maxLength > 0) 
-            codeTextField.setDocument(new MaxLengthDocument(maxLength, this));        
+        if (this.maxLength > 0)
+            codeTextField.setDocument(new MaxLengthDocument(maxLength, this));
+        initUndoListener();
     }
     
     protected void componentFocusGained(java.awt.event.FocusEvent evt) {
@@ -400,6 +410,9 @@ public class VariableEditorPanel extends javax.swing.JPanel
 
     private void initUndoListener() {
         // undo & redo feature
+        undoHandler = new UndoHandler();
+        undoManager = new UndoManager();
+
         this.codeTextField.getDocument().addUndoableEditListener(undoHandler);
         // ctrl + Z
         KeyStroke undoKeystroke = KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK);
