@@ -60,7 +60,7 @@ public class VariableEditorPanel extends javax.swing.JPanel
     // attributes used for undo/redo purpose
     private UndoAction undoAction;
     private RedoAction redoAction;
-    protected UndoHandler undoHandler;
+    protected UndoHandler undoHandler = new UndoHandler();
     protected UndoManager undoManager;
 
     /**
@@ -228,6 +228,7 @@ public class VariableEditorPanel extends javax.swing.JPanel
         this.maxLength = length;
         if (this.maxLength > 0)
             codeTextField.setDocument(new MaxLengthDocument(maxLength, this));
+        // initialise UndoListener here as the document won't be recreated after this step
         initUndoListener();
     }
     
@@ -408,11 +409,17 @@ public class VariableEditorPanel extends javax.swing.JPanel
         add(filler1);
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     *  Undo/redo feature is initialised here
+     *  We need to recreate a new instance of UndoManager each time initUndoListener() is launched to reset undo/redo's history.
+     *  To avoid having multiple UndoableEditListener on the same field, we need to remove then re-add the listener during the initialisation
+     *
+     *  Then shortcuts are created and added to the InputMap.
+     *  Finally, the actionMapKey triggered by the shortcut is associated to its action in the ActionMap
+     */
     private void initUndoListener() {
-        // undo & redo feature
-        undoHandler = new UndoHandler();
         undoManager = new UndoManager();
-
+        this.codeTextField.getDocument().removeUndoableEditListener(undoHandler);
         this.codeTextField.getDocument().addUndoableEditListener(undoHandler);
         // ctrl + Z
         KeyStroke undoKeystroke = KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK);
@@ -430,14 +437,9 @@ public class VariableEditorPanel extends javax.swing.JPanel
         this.codeTextField.getActionMap().put("redoKeystroke", redoAction);
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    protected javax.swing.JTextField codeTextField;
-    private javax.swing.Box.Filler filler1;
-    protected javax.swing.JPanel jPanel1;
-    protected javax.swing.JSplitPane mainSplitPane;
-    protected javax.swing.JLabel variableNameLabel;
-    // End of variables declaration//GEN-END:variables
-
+    /**
+     * The following classes - UndoHandler, UndoAction, RedoAction - are used for the undo/feature
+     */
     class UndoHandler implements UndoableEditListener {
         public void undoableEditHappened(UndoableEditEvent e) {
             undoManager.addEdit(e.getEdit());
@@ -445,7 +447,6 @@ public class VariableEditorPanel extends javax.swing.JPanel
             redoAction.update();
         }
     }
-
     class UndoAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
             try {
@@ -469,7 +470,6 @@ public class VariableEditorPanel extends javax.swing.JPanel
             }
         }
     }
-
     class RedoAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
             try {
@@ -493,4 +493,12 @@ public class VariableEditorPanel extends javax.swing.JPanel
             }
         }
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    protected javax.swing.JTextField codeTextField;
+    private javax.swing.Box.Filler filler1;
+    protected javax.swing.JPanel jPanel1;
+    protected javax.swing.JSplitPane mainSplitPane;
+    protected javax.swing.JLabel variableNameLabel;
+    // End of variables declaration//GEN-END:variables
 }
