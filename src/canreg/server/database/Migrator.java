@@ -20,8 +20,13 @@
 package canreg.server.database;
 
 import canreg.common.Globals;
+import canreg.common.cachingtableapi.DistributedTableDescriptionException;
+import canreg.common.database.Patient;
+
 import java.rmi.RemoteException;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,6 +75,9 @@ public class Migrator {
             }
             if (databaseVersion.length() < 7 || databaseVersion.substring(0, 7).compareTo("5.00.43") < 0) {
                 migrateTo_5_00_43(canRegDAO);
+            }
+            if (databaseVersion.length() < 7 || databaseVersion.substring(0, 7).compareTo("5.00.44") < 0) {
+                migrateTo_5_00_44(canRegDAO);
             }
         }
         // canRegDAO.setSystemPropery("DATABASE_VERSION", newVersion);
@@ -124,5 +132,29 @@ public class Migrator {
         } catch (SQLException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void migrateTo_5_00_44(CanRegDAO db) {
+        try {
+            try {
+                db.upgrade();
+                db.setSystemPropery("DATABASE_VERSION", "5.00.44"); // update version number
+
+                db.addColumnToTable("UUID", "VARCHAR(36) UNIQUE", Globals.PATIENT_TABLE_NAME); // add new column to the Patient table
+                ArrayList<Patient> patients = db.getAllPatients();
+                // set UUID to be not null & unique
+                for (Patient patient : patients) {
+                    patient.setVariable(Globals.StandardVariableNames.UUID.toString(), UUID.randomUUID()); // set UUID
+                    db.editPatient(patient, true); // update the patient in the database
+                }
+            } catch (SQLException | UnknownTableException | DistributedTableDescriptionException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
+            } catch (RecordLockedException e) {
+                System.out.println("record is locked!");
+            }
+        } catch (RemoteException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        LOGGER.log(Level.INFO, "Migrated the database to version 5.00.44.");
     }
 }

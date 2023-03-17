@@ -682,6 +682,8 @@ public class QueryGenerator {
                 //    queryLine += " NOT NULL UNIQUE ";
             } else if (standardVariableName.equalsIgnoreCase(Globals.StandardVariableNames.SourceRecordID.toString())) {
                 queryLine += " NOT NULL UNIQUE ";
+            } else if (standardVariableName.equalsIgnoreCase(Globals.StandardVariableNames.UUID.toString())) {
+                queryLine += " UNIQUE ";
             }
         }
         return queryLine;

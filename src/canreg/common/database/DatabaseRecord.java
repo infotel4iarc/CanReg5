@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 // import fr.iarc.cin.iarctools.tools.RecordInterface;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  *
@@ -118,5 +119,14 @@ public class DatabaseRecord implements Serializable //   Commented away to be ab
         } else {
             return value.toString();
         }
+    }
+
+    public UUID getUuid() {
+        Object obj = getVariable("uuid");
+        if (obj != null) {
+            if (obj.toString().length()>0)
+                return UUID.fromString(getVariable("uuid").toString());
+        }
+        return null;
     }
 }
