@@ -19,10 +19,14 @@
  */
 package canreg.server.database;
 
+import canreg.client.CanRegClientApp;
+import canreg.client.gui.tools.WaitFrame;
 import canreg.common.Globals;
 import canreg.common.cachingtableapi.DistributedTableDescriptionException;
 import canreg.common.database.Patient;
 
+import javax.swing.*;
+import java.awt.*;
 import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -77,6 +81,17 @@ public class Migrator {
                 migrateTo_5_00_43(canRegDAO);
             }
             if (databaseVersion.length() < 7 || databaseVersion.substring(0, 7).compareTo("5.00.44") < 0) {
+                JDesktopPane desktopPane = CanRegClientApp.getApplication().getDesktopPane();
+                for (Component component: desktopPane.getComponents()) {
+                    if (component.getClass() == WaitFrame.class) {
+                        WaitFrame waitFrame = (WaitFrame) component;
+                        waitFrame.setLabel("The database needs to be migrated. This operation will take some time.");
+                        waitFrame.setTitle("Migrating database");
+                        waitFrame.setSize(600, 127);
+                        waitFrame.setLocation((desktopPane.getWidth() - waitFrame.getWidth()) / 2, (desktopPane.getHeight() - waitFrame.getHeight()) / 2);
+                        break;
+                    }
+                }
                 migrateTo_5_00_44(canRegDAO);
             }
         }
@@ -150,6 +165,7 @@ public class Migrator {
             } catch (SQLException | UnknownTableException | DistributedTableDescriptionException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             } catch (RecordLockedException e) {
+                LOGGER.log(Level.SEVERE, "record is locked", e);
                 System.out.println("record is locked!");
             }
         } catch (RemoteException ex) {
