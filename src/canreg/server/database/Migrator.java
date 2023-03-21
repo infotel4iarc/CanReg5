@@ -85,8 +85,8 @@ public class Migrator {
                 for (Component component: desktopPane.getComponents()) {
                     if (component.getClass() == WaitFrame.class) {
                         WaitFrame waitFrame = (WaitFrame) component;
-                        waitFrame.setLabel("The database needs to be migrated. This operation will take some time.");
-                        waitFrame.setTitle("Migrating database");
+                        waitFrame.setLabel(java.util.ResourceBundle.getBundle("canreg/client/gui/resources/LoginInternalFrame").getString("MIGRATING_DATABASE_LABEL"));
+                        waitFrame.setTitle(java.util.ResourceBundle.getBundle("canreg/client/gui/resources/LoginInternalFrame").getString("MIGRATING_DATABASE_TITLE"));
                         waitFrame.setSize(600, 127);
                         waitFrame.setLocation((desktopPane.getWidth() - waitFrame.getWidth()) / 2, (desktopPane.getHeight() - waitFrame.getHeight()) / 2);
                         break;
