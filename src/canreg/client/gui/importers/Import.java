@@ -524,9 +524,7 @@ public class Import {
                                       boolean intoHoldingDB, Document doc) 
             throws SQLException, RemoteException, SecurityException, RecordLockedException, 
                    UnknownTableException, DistributedTableDescriptionException, Exception {
-        
-        GlobalToolBox globalToolBox = new GlobalToolBox(doc);
-        
+
         int numberOfLinesRead = 0;
         Writer reportWriter = new BufferedWriter(new OutputStreamWriter(System.out));
         if (io.getReportFileName() != null && io.getReportFileName().trim().length() > 0) {
