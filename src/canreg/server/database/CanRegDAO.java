@@ -59,7 +59,7 @@ import java.util.logging.Logger;
  * @author ervikm (based on code by John O'Conner)
  */
 public class CanRegDAO {
-    
+
     private static final Logger LOGGER = Logger.getLogger(CanRegDAO.class.getName());
     private static final boolean DEBUG = false;
     private static final String BOOT_PASSWORD = "bootPassword";
@@ -1049,7 +1049,6 @@ public class CanRegDAO {
 
     private synchronized int saveRecord(String tableName, DatabaseRecord record, PreparedStatement stmtSaveNewRecord) throws SQLException {
         int id = -1;
-
         stmtSaveNewRecord.clearParameters();
 
         int recordVariableNumber = 0;
@@ -1644,13 +1643,6 @@ public class CanRegDAO {
             throws RecordLockedException, SQLException, SecurityException {
         boolean bEdited = false;
 
-        if (record instanceof Patient) {
-            UUID uuid = record.getUuid();
-            if (uuid == null) {
-                LOGGER.log(Level.SEVERE, "the uuid is empty");
-                throw new SecurityException("The UUID shouldn't be missing!");
-            }
-        }
         try {
             stmtEditRecord.clearParameters();
 

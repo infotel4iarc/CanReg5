@@ -20,6 +20,7 @@
 package canreg.common.database;
 
 import canreg.client.CanRegClientApp;
+import canreg.common.Globals;
 import canreg.common.Translator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 //   Commented away to be able to disable the IARCtools package... 
@@ -121,12 +122,24 @@ public class DatabaseRecord implements Serializable //   Commented away to be ab
         }
     }
 
+    /**
+     *
+     * @return the Patient's UUID if it's valid, else returns null
+     */
     public UUID getUuid() {
         Object obj = getVariable("uuid");
-        if (obj != null) {
-            if (obj.toString().length()>0)
-                return UUID.fromString(getVariable("uuid").toString());
+        if (obj != null && !obj.toString().equals("")) {
+            try {
+                if (UUID.fromString(obj.toString()).equals(obj))
+                    return UUID.fromString(obj.toString());
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         }
         return null;
+    }
+
+    public void setUuid() {
+        this.setVariable(Globals.StandardVariableNames.UUID.name(),UUID.randomUUID());
     }
 }

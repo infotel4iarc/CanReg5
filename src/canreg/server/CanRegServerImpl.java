@@ -514,6 +514,12 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      */
     @Override
     public int savePatient(Patient patient) throws SQLException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            patient.setUuid();
+        } else {
+            LOGGER.log(Level.SEVERE, "This shouldn't have already an UUID");
+        }
         return currentDAO.savePatient(patient);
     }
 
@@ -689,11 +695,21 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
     @Override
     public synchronized void editPatient(Patient patient)
             throws SQLException, RemoteException, SecurityException, RecordLockedException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            LOGGER.log(Level.SEVERE, "the uuid is empty");
+            patient.setUuid();
+        }
         currentDAO.editPatient(patient, false);
     }
 
     public void editPatientFromHoldingToProduction(Patient patient)
             throws RemoteException, SecurityException, RecordLockedException, SQLException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            LOGGER.log(Level.SEVERE, "the uuid is empty");
+            patient.setUuid();
+        }
         currentDAO.editPatient(patient, true);
     }
 
