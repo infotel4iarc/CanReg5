@@ -62,16 +62,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -527,6 +518,12 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      */
     @Override
     public int savePatient(Patient patient) throws SQLException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            patient.setUuid();
+        } else {
+            LOGGER.log(Level.SEVERE, "This shouldn't have already an UUID");
+        }
         return currentDAO.savePatient(patient);
     }
 
@@ -702,11 +699,21 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
     @Override
     public synchronized void editPatient(Patient patient)
             throws SQLException, RemoteException, SecurityException, RecordLockedException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            LOGGER.log(Level.SEVERE, "the uuid is empty");
+            patient.setUuid();
+        }
         currentDAO.editPatient(patient, false);
     }
 
     public void editPatientFromHoldingToProduction(Patient patient)
             throws RemoteException, SecurityException, RecordLockedException, SQLException {
+        UUID uuid = patient.getUuid();
+        if (uuid == null) {
+            LOGGER.log(Level.SEVERE, "the uuid is empty");
+            patient.setUuid();
+        }
         currentDAO.editPatient(patient, true);
     }
 

@@ -153,15 +153,15 @@ public class Migrator {
         try {
             try {
                 db.upgrade();
-                db.setSystemPropery("DATABASE_VERSION", "5.00.44"); // update version number
 
                 db.addColumnToTable("UUID", "VARCHAR(36) UNIQUE", Globals.PATIENT_TABLE_NAME); // add new column to the Patient table
                 ArrayList<Patient> patients = db.getAllPatients();
                 // set UUID to be not null & unique
                 for (Patient patient : patients) {
-                    patient.setVariable(Globals.StandardVariableNames.UUID.toString(), UUID.randomUUID()); // set UUID
+                    patient.setUuid(); // set UUID
                     db.editPatient(patient, true); // update the patient in the database
                 }
+                db.setSystemPropery("DATABASE_VERSION", "5.00.44"); // update version number
             } catch (SQLException | UnknownTableException | DistributedTableDescriptionException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             } catch (RecordLockedException e) {

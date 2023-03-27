@@ -1054,17 +1054,6 @@ public class CanRegDAO {
 
     private synchronized int saveRecord(String tableName, DatabaseRecord record, PreparedStatement stmtSaveNewRecord) throws SQLException {
         int id = -1;
-
-        // if the record is a patient record, create a UUID
-        if (record instanceof Patient) {
-            UUID uuid = record.getUuid();
-            if (uuid == null) {
-                uuid = java.util.UUID.randomUUID();
-                record.setVariable(Globals.StandardVariableNames.UUID.name(), uuid);
-            } else {
-                LOGGER.log(Level.SEVERE, "This shouldn't have already an UUID");
-            }
-        }
         stmtSaveNewRecord.clearParameters();
 
         int recordVariableNumber = 0;
@@ -1659,13 +1648,6 @@ public class CanRegDAO {
             throws RecordLockedException, SQLException, SecurityException {
         boolean bEdited = false;
 
-        if (record instanceof Patient) {
-            UUID uuid = record.getUuid();
-            if (uuid == null) {
-                LOGGER.log(Level.SEVERE, "the uuid is empty");
-                throw new SecurityException("The UUID shouldn't be missing!");
-            }
-        }
         try {
             stmtEditRecord.clearParameters();
 
