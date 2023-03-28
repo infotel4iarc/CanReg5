@@ -3034,7 +3034,80 @@ public class CanRegDAO {
         return success;
     }
 
-    public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
+    public void deleteEmptyRecords(){
+        ResultSet result;
+
+        DatabaseFilter filter = new DatabaseFilter();
+        filter.setQueryType(DatabaseFilter.QueryType.BROWSER);
+
+        StringBuilder filterStrBuilder = new StringBuilder();
+        filterStrBuilder.append(strGetPatientsAndTumours)
+                .append(" AND ").append("FAMN").append(" = ''")
+                .append(" AND ").append("FIRSTN").append(" = ''")
+                .append(" AND ").append("AGE").append(" = ").append(-1);
+        filter.setFilterString(filterStrBuilder.toString());
+
+        int rowCount;
+        String[] columnNames;
+
+        try (Statement statement = dbConnection.createStatement();){
+            result = statement.executeQuery(filterStrBuilder.toString());
+            dbConnection.setAutoCommit(false);
+            while (result.next()){
+                int patientId = result.getInt(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                int tumourId = result.getInt(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+
+
+
+                /*rowCount = result.getRow(); // get the row number of the last element as rowCount
+                result.beforeFirst(); // reset the cursor to first element
+
+                DistributedTableDataSource dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
+                columnNames = dataSource.getTableDescription().getColumnNames(); */
+
+                deleteSources(tumourId);
+
+
+                boolean tumourDeleted = deleteTumourRecord(tumourId);
+                if(tumourDeleted){
+                    deletePatientRecord(patientId);
+                }
+
+
+
+
+            }
+        } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, String.format("Exception in : %s", filterStrBuilder.toString()), e);
+        } catch (RecordLockedException e) {
+            throw new RuntimeException(e);
+        } catch (UnknownTableException e) {
+            throw new RuntimeException(e);
+        } catch (DistributedTableDescriptionException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        /*int rowCount;
+        String[] columnNames;
+        try {
+            if (result.last()) {    
+                rowCount = result.getRow(); // get the row number of the last element as rowCount    
+                result.beforeFirst(); // reset the cursor to first element
+    
+            DistributedTableDataSource dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
+            columnNames = dataSource.getTableDescription().getColumnNames();
+
+
+        }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (DistributedTableDescriptionException e) {
+            throw new RuntimeException(e);
+        }*/
+    }
+
+        public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
         boolean success = false;
 
         Statement statement = dbConnection.createStatement();

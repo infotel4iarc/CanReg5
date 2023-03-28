@@ -607,6 +607,11 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
+    public void deleteEmptyRecords() throws RemoteException {
+        serverProxy.deleteEmptyRecords();
+    }
+
+    @Override
     public int hashCode() {
         return serverProxy.hashCode();
     }

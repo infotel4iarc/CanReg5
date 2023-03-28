@@ -492,6 +492,15 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
+    public void deleteEmptyRecords() {
+        try {
+            theServer.deleteEmptyRecords();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public boolean checkPassword(String username, String encryptedPassword) throws RemoteException {
         checkPermission("checkPassword");
         return theServer.checkPassword(username, encryptedPassword);
