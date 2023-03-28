@@ -76,6 +76,7 @@ public class DatabaseGarbler {
         Object[][] rows;
 
         DatabaseVariablesListElement patientIDVariableListElement = standardVariablesMap.get(Globals.StandardVariableNames.PatientID);
+        DatabaseVariablesListElement patientUIIDVariableListElement = standardVariablesMap.get(StandardVariableNames.UUID);
         DatabaseVariablesListElement patientRecordIDVariableListElement = standardVariablesMap.get(Globals.StandardVariableNames.PatientRecordID);
         DatabaseVariablesListElement patientRecordIDTumourTableVariableListElement = standardVariablesMap.get(Globals.StandardVariableNames.PatientRecordIDTumourTable);
         DatabaseVariablesListElement firstNameVariableListElement = standardVariablesMap.get(Globals.StandardVariableNames.FirstName);
@@ -127,10 +128,10 @@ public class DatabaseGarbler {
 
                 try {
                     int patientDatabaseRecordID = (Integer) rows[i][0];
-                    patient1 = (Patient) CanRegClientApp.getApplication().getRecord(patientDatabaseRecordID, Globals.PATIENT_TABLE_NAME, false, null);
+                    patient1 = (Patient) CanRegClientApp.getApplication().getRecord("" + patientDatabaseRecordID, Globals.PATIENT_TABLE_NAME, false, null);
                     if (patient1 != null) {
                         try {
-                            patients1 = CanRegClientApp.getApplication().getPatientsByPatientID((String) patient1.getVariable(patientIDVariableListElement.getDatabaseVariableName()), true, null);
+                            patients1 = CanRegClientApp.getApplication().getPatientsByPatientID((String) patient1.getVariable(patientUIIDVariableListElement.getDatabaseVariableName()), true, null);
                         } catch (DistributedTableDescriptionException ex) {
                             LOGGER.log(Level.SEVERE, null, ex);
                         }
@@ -170,11 +171,11 @@ public class DatabaseGarbler {
                         while (patient2RecordID == patientDatabaseRecordID) {
                             patient2RecordID = rnd.nextInt(distributedTableDescription.getRowCount());
                         }
-                        patient2 = (Patient) CanRegClientApp.getApplication().getRecord(patient2RecordID, Globals.PATIENT_TABLE_NAME, false, null);
+                        patient2 = (Patient) CanRegClientApp.getApplication().getRecord("" + patient2RecordID, Globals.PATIENT_TABLE_NAME, false, null);
                         while (patient2 == null) {
-                            CanRegClientApp.getApplication().releaseRecord(patient2RecordID, Globals.PATIENT_TABLE_NAME, null);
+                            CanRegClientApp.getApplication().releaseRecord("" + patient2RecordID, Globals.PATIENT_TABLE_NAME, null);
                             patient2RecordID = rnd.nextInt(distributedTableDescription.getRowCount());
-                            patient2 = (Patient) CanRegClientApp.getApplication().getRecord(patient2RecordID, Globals.PATIENT_TABLE_NAME, false, null);
+                            patient2 = (Patient) CanRegClientApp.getApplication().getRecord("" + patient2RecordID, Globals.PATIENT_TABLE_NAME, false, null);
                         }
                         // swap last names with this one
                         String oldLastName = (String) patient1.getVariable(lastNameVariableListElement.getDatabaseVariableName());
@@ -187,11 +188,11 @@ public class DatabaseGarbler {
                         while (patient3RecordID == patientDatabaseRecordID || patient3RecordID == patient2RecordID) {
                             patient3RecordID = rnd.nextInt(distributedTableDescription.getRowCount());
                         }
-                        patient3 = (Patient) CanRegClientApp.getApplication().getRecord(patient3RecordID, Globals.PATIENT_TABLE_NAME, false, null);
+                        patient3 = (Patient) CanRegClientApp.getApplication().getRecord("" + patient3RecordID, Globals.PATIENT_TABLE_NAME, false, null);
                         while (patient3 == null) {
-                            CanRegClientApp.getApplication().releaseRecord(patient3RecordID, Globals.PATIENT_TABLE_NAME, null);
+                            CanRegClientApp.getApplication().releaseRecord("" + patient3RecordID, Globals.PATIENT_TABLE_NAME, null);
                             patient3RecordID = rnd.nextInt(distributedTableDescription.getRowCount());
-                            patient3 = (Patient) CanRegClientApp.getApplication().getRecord(patient3RecordID, Globals.PATIENT_TABLE_NAME, false, null);
+                            patient3 = (Patient) CanRegClientApp.getApplication().getRecord("" + patient3RecordID, Globals.PATIENT_TABLE_NAME, false, null);
                         }
 
                         // swap adress fields with this one
@@ -230,7 +231,7 @@ public class DatabaseGarbler {
                                 }
                                 // point the tumour to the first patient record
                                 tumor.setVariable(patientRecordIDTumourTableVariableListElement.getDatabaseVariableName(), patients1[0].getVariable(patientRecordIDVariableListElement.getDatabaseVariableName()));
-                                CanRegClientApp.getApplication().releaseRecord((Integer) tumor.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME), Globals.TUMOUR_TABLE_NAME, null);
+                                CanRegClientApp.getApplication().releaseRecord("" + tumor.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME), Globals.TUMOUR_TABLE_NAME, null);
                                 CanRegClientApp.getApplication().editRecord(tumor, null);
 
                             }
@@ -242,16 +243,16 @@ public class DatabaseGarbler {
 
                         // release the records
                         for (Patient patient : patients1) {
-                            CanRegClientApp.getApplication().releaseRecord((Integer) patient.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME), Globals.PATIENT_TABLE_NAME, null);
+                            CanRegClientApp.getApplication().releaseRecord("" + patient.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME), Globals.PATIENT_TABLE_NAME, null);
                         }
-                        CanRegClientApp.getApplication().releaseRecord(patient2RecordID, Globals.PATIENT_TABLE_NAME, null);
-                        CanRegClientApp.getApplication().releaseRecord(patient3RecordID, Globals.PATIENT_TABLE_NAME, null);
+                        CanRegClientApp.getApplication().releaseRecord("" + patient2RecordID, Globals.PATIENT_TABLE_NAME, null);
+                        CanRegClientApp.getApplication().releaseRecord("" + patient3RecordID, Globals.PATIENT_TABLE_NAME, null);
 
                         // save the first record - drop the others
                         CanRegClientApp.getApplication().editRecord(patients1[0], null);
 
                         for (int j = 1; j < patients1.length; j++) {
-                            int recordID = (Integer) patients1[j].getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                            String recordID = (String) patients1[j].getVariable(Globals.PATIENT_TABLE_UUID);
                             CanRegClientApp.getApplication().deleteRecord(recordID, Globals.PATIENT_TABLE_NAME, null);
                         }
                         CanRegClientApp.getApplication().editRecord(patient2, null);

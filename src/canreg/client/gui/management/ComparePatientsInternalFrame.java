@@ -392,7 +392,7 @@ public class ComparePatientsInternalFrame extends javax.swing.JInternalFrame {
             rows = CanRegClientApp.getApplication().retrieveRows(distributedTableDescription.getResultSetID(), 0, numberOfRecords, null);
             CanRegClientApp.getApplication().releaseResultSet(distributedTableDescription.getResultSetID(), null);
             String[] columnNames = distributedTableDescription.getColumnNames();
-            int ids[] = new int[numberOfRecords];
+            String ids[] = new String[numberOfRecords];
             boolean found = false;
             int idColumnNumber = 0;
             // First get the patient IDs matching the tumour
@@ -410,7 +410,7 @@ public class ComparePatientsInternalFrame extends javax.swing.JInternalFrame {
                 });
                 // Get all the tumour records for all the patient records...
                 for (int j = 0; j < numberOfRecords; j++) {
-                    ids[j] = (Integer) rows[j][idColumnNumber];
+                    ids[j] = (String) rows[j][idColumnNumber];
                     record = CanRegClientApp.getApplication().getRecord(ids[j], Globals.PATIENT_TABLE_NAME, true, null);
                     recordEditor.addRecord(record);
 

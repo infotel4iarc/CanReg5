@@ -586,7 +586,7 @@ public class QueryGenerator {
         if (tableName.equalsIgnoreCase(Globals.TUMOUR_TABLE_NAME))
             recordIDVariableName = Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME;
         else if (tableName.equalsIgnoreCase(Globals.PATIENT_TABLE_NAME)) 
-            recordIDVariableName = Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME;
+            recordIDVariableName = Globals.PATIENT_TABLE_UUID;
         else if (tableName.equalsIgnoreCase(Globals.SOURCE_TABLE_NAME)) 
             recordIDVariableName = Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME;
         

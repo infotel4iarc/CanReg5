@@ -52,7 +52,8 @@ public class ImportOptions {
     private boolean queryNewNames;
     private boolean dataFromPreviousCanReg;
     private String multiplePrimaryVariableName;
-    private String patientIDVariableName;
+    private String patientPRIDVariableName;
+    private String patientUUIDVariableName;
     private String tumourIDVariablename;
     private String patientRecordIDVariableName;
     private String tumourRecordIDVariablename;
@@ -229,17 +230,31 @@ public class ImportOptions {
     }
 
     /**
-     * @return the patientIDVariableName
+     * @return the patientPRIDVariableName
      */
-    public String getPatientIDVariableName() {
-        return patientIDVariableName;
+    public String getPatientPRIDVariableName() {
+        return patientPRIDVariableName;
     }
 
     /**
-     * @param patientIDVariableName the patientIDVariableName to set
+     * @param patientPRIDVariableName the patientIDVariableName to set
      */
-    public void setPatientIDVariableName(String patientIDVariableName) {
-        this.patientIDVariableName = patientIDVariableName;
+    public void setPatientPRIDVariableName(String patientPRIDVariableName) {
+        this.patientPRIDVariableName = patientPRIDVariableName;
+    }
+
+    /**
+     * @return the patientUUIDVariableName
+     */
+    public String getPatientUUIDVariableName() {
+        return patientUUIDVariableName;
+    }
+
+    /**
+     * @param patientUUIDVariableName the patientIDVariableName to set
+     */
+    public void setPatientUUIDVariableName(String patientUUIDVariableName) {
+        this.patientUUIDVariableName = patientUUIDVariableName;
     }
 
     /**
@@ -257,14 +272,14 @@ public class ImportOptions {
     }
 
         /**
-     * @return the tumourIDVariablename
+     * @return the SourceIDVariablename
      */
     public String getSourceIDVariablename() {
         return sourceIDVariablename;
     }
 
     /**
-     * @param tumourIDVariablename the tumourIDVariablename to set
+     * @param sourceIDVariablename the tumourIDVariablename to set
      */
     public void setSourceIDVariablename(String sourceIDVariablename) {
         this.sourceIDVariablename = sourceIDVariablename;

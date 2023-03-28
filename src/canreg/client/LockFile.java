@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 public class LockFile {
 
     private final String lockFileName;
-    private TreeMap<String, Set<Integer>> locksMap;
+    private TreeMap<String, Set<String>> locksMap;
     private ObjectOutputStream out = null;
     private static final Logger LOGGER = Logger.getLogger(LockFile.class.getName());
 
@@ -54,7 +54,7 @@ public class LockFile {
      *
      * @return
      */
-    public Map<String, Set<Integer>> getMap() {
+    public Map<String, Set<String>> getMap() {
         return locksMap;
     }
 
@@ -67,7 +67,7 @@ public class LockFile {
                 try (FileInputStream fis = new FileInputStream(lockFileName)) {
                     boolean success = false;
                     try (ObjectInputStream in = new ObjectInputStream(fis)) {
-                        locksMap = (TreeMap<String, Set<Integer>>) in.readObject();
+                        locksMap = (TreeMap<String, Set<String>>) in.readObject();
                         success = true;
                     } catch (NullPointerException | ClassNotFoundException | java.io.EOFException | java.io.StreamCorruptedException ex) {
                         LOGGER.log(Level.INFO, null, ex);
@@ -119,7 +119,7 @@ public class LockFile {
             if (locksMap.get(key) == null) {
                 continue;
             }
-            for (Integer i : locksMap.get(key)) {
+            for (String i : locksMap.get(key)) {
                 records++;
             }
         }

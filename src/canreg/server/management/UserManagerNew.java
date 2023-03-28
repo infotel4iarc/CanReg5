@@ -217,11 +217,11 @@ public class UserManagerNew {
         clientSessionsMap.put(remoteHashCode, new ClientSessionData(userName, remoteHashCode));
     }
     
-    public void lockRecord(int recordID, String tableName, Integer remoteHashCode) {
+    public void lockRecord(String recordID, String tableName, Integer remoteHashCode) {
         if(remoteHashCode == null)
             return;
         
-        Set lockSet = clientSessionsMap.get(remoteHashCode).records.get(tableName);
+        Set<String> lockSet = clientSessionsMap.get(remoteHashCode).records.get(tableName);
         if (lockSet == null) {
             lockSet = new TreeSet<>();
             clientSessionsMap.get(remoteHashCode).records.put(tableName, lockSet);
@@ -229,7 +229,7 @@ public class UserManagerNew {
         lockSet.add(recordID);
     }
     
-    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode) {
+    public void releaseRecord(String recordID, String tableName, Integer remoteHashCode) {
 //        db.releaseRecord(recordID, tableName);
         if(remoteHashCode == null)
             return;
@@ -243,10 +243,10 @@ public class UserManagerNew {
     }
 
     public void userLoggedOut(Integer remoteHashCode) {
-        Map<String, Set<Integer>> recordsLocked = clientSessionsMap.remove(remoteHashCode).records;
+        Map<String, Set<String>> recordsLocked = clientSessionsMap.remove(remoteHashCode).records;
         for(String tableName : recordsLocked.keySet()) {
-            Set<Integer> recordsIds = recordsLocked.get(tableName);
-            for(Integer recId : recordsIds)
+            Set<String> recordsIds = recordsLocked.get(tableName);
+            for(String recId : recordsIds)
                 db.releaseRecord(recId, tableName);
         }
     }    
@@ -285,7 +285,7 @@ public class UserManagerNew {
         
         final Integer remoteHashCode;
         final String userName;
-        final Map<String, Set<Integer>> records;
+        final Map<String, Set<String>> records;
         volatile boolean pingReceived;
         
         ClientSessionData(String userName, Integer remoteHashCode) {

@@ -801,7 +801,7 @@ public class UserManagerInternalFrame extends javax.swing.JInternalFrame {
         int id = user.getID();
         if (okToDelete && id > 0) {
             try {
-                canreg.client.CanRegClientApp.getApplication().deleteRecord(id, Globals.USERS_TABLE_NAME, null);
+                canreg.client.CanRegClientApp.getApplication().deleteRecord("" + id, Globals.USERS_TABLE_NAME, null);
                 CanRegClientApp.getApplication().deleteFileReminder(user.getUserName());
             } catch (SQLException | RecordLockedException | SecurityException | RemoteException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);

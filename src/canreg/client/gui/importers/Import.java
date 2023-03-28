@@ -57,7 +57,6 @@ import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -118,7 +117,7 @@ public class Import {
 
         Set<String> noNeedToLookAtPatientVariables = new TreeSet<String>();
 
-        noNeedToLookAtPatientVariables.add(io.getPatientIDVariableName());
+        noNeedToLookAtPatientVariables.add(io.getPatientPRIDVariableName());
         noNeedToLookAtPatientVariables.add(io.getPatientRecordIDVariableName());
 
         String firstNameVariableName = io.getFirstNameVariableName();
@@ -156,7 +155,7 @@ public class Import {
                 numberOfLinesRead++;
                 // We allow for null tasks...
                 boolean needToSavePatientAgain = true;
-                int patientDatabaseRecordID = -1;
+                String patientDatabaseRecordUUID = "";
 
                 if (task != null) {
                     task.firePropertyChange("progress", (numberOfLinesRead - 1) * 100 / linesToRead, (numberOfLinesRead) * 100 / linesToRead);
@@ -239,16 +238,16 @@ public class Import {
 
                 // debugOut(tumour.toString());
                 // add patient to the database
-                Object patientID = patient.getVariable(io.getPatientIDVariableName());
+                Object patientID = patient.getVariable(io.getPatientPRIDVariableName());
                 Object patientRecordID = patient.getVariable(io.getPatientRecordIDVariableName());
 
                 if (patientID == null) {
                     // save the record to get the new patientID;
-                    patientDatabaseRecordID = server.savePatient(patient);
+                    patientDatabaseRecordUUID = server.savePatient(patient);
                     
                     //We can put CanRegServerInterface parameter as null because the lock is false
-                    patient = (Patient) server.getRecord(patientDatabaseRecordID, Globals.PATIENT_TABLE_NAME, false, null);
-                    patientID = patient.getVariable(io.getPatientIDVariableName());
+                    patient = (Patient) server.getRecord(patientDatabaseRecordUUID, Globals.PATIENT_TABLE_NAME, false, null);
+                    patientID = patient.getVariable(io.getPatientPRIDVariableName());
                     patientRecordID = patient.getVariable(io.getPatientRecordIDVariableName());
                 }
 
@@ -305,7 +304,7 @@ public class Import {
 
                     Object tumourID = patientRecordID + "" + tumourSequenceString;
                     //
-                    patient.setVariable(io.getPatientIDVariableName(), patientID);
+                    patient.setVariable(io.getPatientPRIDVariableName(), patientID);
                     tumour.setVariable(io.getTumourIDVariablename(), tumourID);
                     // And store the record ID
 
@@ -357,10 +356,10 @@ public class Import {
                 }
 
                 if (needToSavePatientAgain) {
-                    if (patientDatabaseRecordID > 0) {
+                    if (!patientDatabaseRecordUUID.equals("")) {
                         server.editPatient(patient);
                     } else {
-                        patientDatabaseRecordID = server.savePatient(patient);
+                        patientDatabaseRecordUUID = server.savePatient(patient);
                     }
                 }
                 if (patient != null && tumour != null) {
@@ -538,7 +537,7 @@ public class Import {
         }
         boolean success = false;
         Set<String> noNeedToLookAtPatientVariables = new TreeSet<String>();
-        noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientIDVariableName()));
+        noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientPRIDVariableName()));
         noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientRecordIDVariableName()));
 
         ResultCode worstResultCodeFound;
@@ -873,7 +872,7 @@ public class Import {
         return success;
     }
 
-    public static int importPatient(CanRegServerInterface server, int discrepancyOption,
+    public static String importPatient(CanRegServerInterface server, int discrepancyOption,
                                      String patientRecordID, Patient patientToImport, Writer reportWriter, 
                                      boolean intoHoldingDB, boolean isTestOnly, 
                                      boolean fromHoldingToProduction)
@@ -957,7 +956,7 @@ public class Import {
             }
         }
         
-        return -1;
+        return "";
     }
     
     

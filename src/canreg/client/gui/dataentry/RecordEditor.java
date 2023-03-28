@@ -262,9 +262,9 @@ public class RecordEditor extends javax.swing.JInternalFrame
         // Release all patient records held
         for (DatabaseRecord record : patientRecords) {
             try {
-                Object idObj = record.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                Object idObj = record.getVariable(Globals.PATIENT_TABLE_UUID);
                 if (idObj != null) {
-                    int id = (Integer) idObj;
+                    String id = "" + idObj;
                     canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.PATIENT_TABLE_NAME, server);
                 }
             } catch (RemoteException ex) {
@@ -284,7 +284,7 @@ public class RecordEditor extends javax.swing.JInternalFrame
                     Object idObj = source.getVariable(Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME);
                     if (idObj != null) {
                         int id = (Integer) idObj;
-                        canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.SOURCE_TABLE_NAME, server);
+                        canreg.client.CanRegClientApp.getApplication().releaseRecord("" + id, Globals.SOURCE_TABLE_NAME, server);
                     }
                 } catch (RemoteException ex) {
                    LOGGER.log(Level.SEVERE, null, ex);
@@ -296,7 +296,7 @@ public class RecordEditor extends javax.swing.JInternalFrame
                 Object idObj = tumour.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
                 if (idObj != null) {
                     int id = (Integer) idObj;
-                    canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.TUMOUR_TABLE_NAME, server);
+                    canreg.client.CanRegClientApp.getApplication().releaseRecord("" + id, Globals.TUMOUR_TABLE_NAME, server);
                 }
             } catch (RemoteException ex) {
                LOGGER.log(Level.SEVERE, null, ex);
@@ -837,7 +837,7 @@ public class RecordEditor extends javax.swing.JInternalFrame
         DatabaseRecord newDatabaseRecord = null;
         if (databaseRecord.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME) == null
                 && databaseRecord.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME) == null) {
-            int id = canreg.client.CanRegClientApp.getApplication().saveRecord(databaseRecord, server);
+            String id = canreg.client.CanRegClientApp.getApplication().saveRecord(databaseRecord, server);
             if (databaseRecord instanceof Patient) {
                 // databaseRecord.setVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME, id);
                 newDatabaseRecord = canreg.client.CanRegClientApp.getApplication().getRecord(id, Globals.PATIENT_TABLE_NAME, true, server);
@@ -851,20 +851,19 @@ public class RecordEditor extends javax.swing.JInternalFrame
             }
             JOptionPane.showInternalMessageDialog(this, java.util.ResourceBundle.getBundle("canreg/client/gui/dataentry/resources/RecordEditor").getString("NEW RECORD SAVED."));
         } else {
-            int id = -1;
+            String id = "";
             if (databaseRecord instanceof Patient) {
-                id = (Integer) databaseRecord.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                id = (String) databaseRecord.getVariable(Globals.PATIENT_TABLE_UUID);
                 canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.PATIENT_TABLE_NAME, server);
                 canreg.client.CanRegClientApp.getApplication().editRecord(databaseRecord, server);
-                id = (Integer) databaseRecord.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
                 newDatabaseRecord = canreg.client.CanRegClientApp.getApplication().getRecord(id, Globals.PATIENT_TABLE_NAME, true, server);
                 patientRecords.remove(databaseRecord);
                 patientRecords.add(newDatabaseRecord);
             } else if (databaseRecord instanceof Tumour) {
-                id = (Integer) databaseRecord.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+                id = "" + databaseRecord.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
                 canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.TUMOUR_TABLE_NAME, server);
                 canreg.client.CanRegClientApp.getApplication().editRecord(databaseRecord, server);
-                id = (Integer) databaseRecord.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+                id = "" + databaseRecord.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
                 newDatabaseRecord = canreg.client.CanRegClientApp.getApplication().getRecord(id, Globals.TUMOUR_TABLE_NAME, true, server);
                 tumourRecords.remove(databaseRecord);
                 tumourRecords.add(newDatabaseRecord);
@@ -971,10 +970,10 @@ public class RecordEditor extends javax.swing.JInternalFrame
         // Release all patient records held
         for (DatabaseRecord record : patientRecords) {
             try {
-                Object idObj = record.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
-                if (idObj != null) {
-                    int id = (Integer) idObj;
-                    canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.PATIENT_TABLE_NAME, server);
+                Object uiidObj = record.getVariable(Globals.PATIENT_TABLE_UUID);
+                if (uiidObj != null) {
+                    String uuid = (String) uiidObj;
+                    canreg.client.CanRegClientApp.getApplication().releaseRecord(uuid, Globals.PATIENT_TABLE_NAME, server);
                 }
 
             } catch (RemoteException ex) {
@@ -996,7 +995,7 @@ public class RecordEditor extends javax.swing.JInternalFrame
                     Object idObj = source.getVariable(Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME);
 
                     if (idObj != null) {
-                        int id = (Integer) idObj;
+                        String id = "" + idObj;
                         canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.SOURCE_TABLE_NAME, server);
                     }
 
@@ -1010,7 +1009,7 @@ public class RecordEditor extends javax.swing.JInternalFrame
             try {
                 Object idObj = tumour.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
                 if (idObj != null) {
-                    int id = (Integer) idObj;
+                    String id = "" + idObj;
                     canreg.client.CanRegClientApp.getApplication().releaseRecord(id, Globals.TUMOUR_TABLE_NAME, server);
 
                 }
@@ -1400,12 +1399,12 @@ public class RecordEditor extends javax.swing.JInternalFrame
 
     private boolean deleteRecord(DatabaseRecord record) {
         boolean success = false;
-        int id = -1;
+        String id = "";
         String tableName = null;
         if (record instanceof Patient) {
-            Object idObject = record.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+            Object idObject = record.getVariable(Globals.PATIENT_TABLE_UUID);
             if (idObject != null) {
-                id = (Integer) idObject;
+                id = (String) idObject;
             }
             tableName = Globals.PATIENT_TABLE_NAME;
         } else if (record instanceof Tumour) {
@@ -1417,17 +1416,17 @@ public class RecordEditor extends javax.swing.JInternalFrame
 
             Object idObject = record.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
             if (idObject != null) {
-                id = (Integer) idObject;
+                id = "" + idObject;
             }
             tableName = Globals.TUMOUR_TABLE_NAME;
         } else if (record instanceof Source) {
             Object idObject = record.getVariable(Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME);
             if (idObject != null) {
-                id = (Integer) idObject;
+                id = "" + idObject;
             }
             tableName = Globals.SOURCE_TABLE_NAME;
         }
-        if (id >= 0) {
+        if (!id.equals("")) {
             try {
                 canreg.client.CanRegClientApp.getApplication().releaseRecord(id, tableName, server);
                 success = canreg.client.CanRegClientApp.getApplication().deleteRecord(id, tableName, server);

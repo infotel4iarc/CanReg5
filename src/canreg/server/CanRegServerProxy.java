@@ -154,7 +154,7 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
-    public int savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException {
+    public String savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException {
         checkPermission("savePatient");
         return theServer.savePatient(patient);
     }
@@ -219,7 +219,7 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
-    public DatabaseRecord getRecord(int recordID, String tableName, boolean lock, Integer remoteHashCode) 
+    public DatabaseRecord getRecord(String recordID, String tableName, boolean lock, Integer remoteHashCode)
             throws RemoteException, SecurityException, RecordLockedException {
         checkPermission("get:" + tableName);
         return theServer.getRecord(recordID, tableName, lock, this.hashCode());
@@ -332,7 +332,7 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
-    public boolean deleteRecord(int id, String tableName) throws RemoteException, SecurityException, RecordLockedException, SQLException {
+    public boolean deleteRecord(String id, String tableName) throws RemoteException, SecurityException, RecordLockedException, SQLException {
         checkPermission("deleteRecord: " + tableName);
         return theServer.deleteRecord(id, tableName);
     }
@@ -368,7 +368,7 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
-    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode) 
+    public void releaseRecord(String recordID, String tableName, Integer remoteHashCode)
             throws RemoteException, SecurityException {
         checkPermission("releaseRecord: " + tableName + "-" + recordID);
         theServer.releaseRecord(recordID, tableName, this.hashCode());

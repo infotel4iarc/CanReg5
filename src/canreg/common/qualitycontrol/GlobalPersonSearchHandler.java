@@ -31,7 +31,7 @@ public class GlobalPersonSearchHandler {
     private DistributedTableDescription distributedTableDescription;
     private int position;
     private Object[][] patientRecordIDsWithinRange;
-    private Object[][] allPatientRecordIDs;
+    private Object[][] allPatientUuid;
 
     /**
      * @return the personSearcher
@@ -83,11 +83,11 @@ public class GlobalPersonSearchHandler {
         return patientRecordIDsWithinRange;
     }
 
-        public void setAllPatientRecordIDs(Object[][] rowdata) {
-        this.allPatientRecordIDs = rowdata;
+        public void setAllPatientUuid(Object[][] rowdata) {
+        this.allPatientUuid = rowdata;
     }
 
-    public Object[][] getAllPatientRecordIDs() {
-        return allPatientRecordIDs;
+    public Object[][] getAllPatientUuid() {
+        return allPatientUuid;
     }
 }

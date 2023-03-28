@@ -103,10 +103,8 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
      * connects to holding database.
      * This new instance will have the same RMI client connection as the singleton-ish
      * instance that you have acquired through getInstance().
-     * @param originalRegistryCode
      * @param holdingRegistryCode
-     * @param registryCode
-     * @return 
+     * @return
      */
     public CanRegRegistryProxy getInstanceForHoldingDB(String holdingRegistryCode)
             throws RemoteException {
@@ -203,9 +201,9 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
-    public int savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException {
+    public String savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException {
         changeRegistryDB(registryCode);
-        int toReturn = serverProxy.savePatient(patient);
+        String toReturn = serverProxy.savePatient(patient);
         resetRegistryDB();
         return toReturn;
     }
@@ -284,7 +282,7 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
-    public DatabaseRecord getRecord(int recordID, String tableName, boolean lock, Integer remoteHashCode) 
+    public DatabaseRecord getRecord(String recordID, String tableName, boolean lock, Integer remoteHashCode)
             throws RemoteException, SecurityException, RecordLockedException {
         changeRegistryDB(registryCode);
         DatabaseRecord toReturn = serverProxy.getRecord(recordID, tableName, lock, remoteHashCode);
@@ -414,7 +412,7 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
-    public boolean deleteRecord(int id, String tableName) throws RemoteException, SecurityException, RecordLockedException, SQLException {
+    public boolean deleteRecord(String id, String tableName) throws RemoteException, SecurityException, RecordLockedException, SQLException {
         changeRegistryDB(registryCode);
         boolean toReturn = serverProxy.deleteRecord(id, tableName);
         resetRegistryDB();
@@ -461,7 +459,7 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
-    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+    public void releaseRecord(String recordID, String tableName, Integer remoteHashCode)
             throws RemoteException, SecurityException {
         changeRegistryDB(registryCode);
         serverProxy.releaseRecord(recordID, tableName, remoteHashCode);

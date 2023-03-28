@@ -95,7 +95,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
 
     private CanRegDAO currentDAO;
     private HashMap<String, CanRegDAO> registriesDAOs;
-    private Map<Integer, Object[]> patientsData;
+    private Map<String, Object[]> patientsData;
 
     /**
      *
@@ -217,7 +217,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
         Map<String, User> usersMap = currentDAO.getUsers();
         for(User apiUser : usersMap.values()) {
             // TODO: read the RESTAPI role in the configuration, use ANALYST until then 
-            if(apiUser.getUserRightLevel().equals(UserRightLevels.ANALYST)) {
+            if(apiUser.getUserRightLevel().equals(UserRightLevels.API)) {
                 LOGGER.info("Creating holding DB for User: " + apiUser.getUserName());
                 String mainRegistryCode = getCanRegRegistryCode();
                 try {
@@ -517,7 +517,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      * @throws SQLException
      */
     @Override
-    public int savePatient(Patient patient) throws SQLException {
+    public String savePatient(Patient patient) throws SQLException {
         UUID uuid = patient.getUuid();
         if (uuid == null) {
             patient.setUuid();
@@ -646,14 +646,14 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
 
     /**
      *
-     * @param patientID
-     * @return
+     * @param patientUUID the UUID from the "Patient" table
+     * @return a database record
      * @throws java.rmi.RemoteException
      * @throws java.lang.SecurityException
      */
-    private DatabaseRecord getPatient(int patientID)
+    private DatabaseRecord getPatient(String patientUUID)
             throws RemoteException, SecurityException, RecordLockedException {
-        return getRecord(patientID, Globals.PATIENT_TABLE_NAME, false, null);
+        return getRecord(patientUUID, Globals.PATIENT_TABLE_NAME, false, null);
     }
 
     /**
@@ -666,7 +666,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      * @throws RecordLockedException
      */
     @Override
-    public DatabaseRecord getRecord(int recordID, String tableName, boolean lock, Integer remoteHashCode)
+    public DatabaseRecord getRecord(String recordID, String tableName, boolean lock, Integer remoteHashCode)
             throws RemoteException, SecurityException, RecordLockedException {
         DatabaseRecord rec = currentDAO.getRecord(recordID, tableName, lock);
         if (lock) {
@@ -683,7 +683,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      * @throws SecurityException
      */
     @Override
-    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode)
+    public void releaseRecord(String recordID, String tableName, Integer remoteHashCode)
             throws RemoteException, SecurityException {
         currentDAO.releaseRecord(recordID, tableName);
         userManager.releaseRecord(recordID, tableName, remoteHashCode);
@@ -870,7 +870,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
 
             dataDescription = getDistributedTableDescription(filter, Globals.PATIENT_TABLE_NAME);
             resultSetID = dataDescription.getResultSetID();
-            gpsh.setAllPatientRecordIDs(retrieveRows(resultSetID, 0, dataDescription.getRowCount()));
+            gpsh.setAllPatientUuid(retrieveRows(resultSetID, 0, dataDescription.getRowCount()));
             releaseResultSet(resultSetID);
             DatabaseIndexesListElement dbile = new DatabaseIndexesListElement(null);
             dbile.setDatabaseTableName(Globals.PATIENT_TABLE_NAME);
@@ -935,12 +935,12 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
                     patientsData = new HashMap<>(rowData.length);
                     try {
                         for (Object[] r : rowData) {
-                            int patientID = (Integer) r[0];
+                            String patientUUID = (String) r[0];
                             // all selected data from the database are on the variable patientsData
                             try {
-                                patientsData.put(patientID,
+                                patientsData.put(patientUUID,
                                     ((DefaultPersonSearch) searcher)
-                                        .getPatientVariables((Patient) getPatient(patientID),
+                                        .getPatientVariables((Patient) getPatient(patientUUID),
                                             patientRecordIDvariableName));
                             } catch (RecordLockedException ex) {
                                 LOGGER.log(Level.SEVERE,null,ex);
@@ -952,12 +952,12 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
                 }
                 //  read all the stored data in memory to compute the patientIDScorePatientIDMap
                 for (int row = startRow; row < endRow && row < rowData.length; row++) {
-                    int patientIDA = (Integer) rowData[row][0];
+                    String patientIDA = "" + rowData[row][0];
                     Object[] patientAData = patientsData.get(patientIDA);
                     // Map<String, Float> patientIDScoreMap = performPersonSearch(patientA, searcher, globalPersonSearchHandler.getDistributedTableDescription());
 
                     if (patientAData != null) {
-                        Map<String, Float> patientIDScoreMap = performPersonSearchDataOnly(patientIDA, patientAData, searcher, patientsData, globalPersonSearchHandler.getAllPatientRecordIDs());
+                        Map<String, Float> patientIDScoreMap = performPersonSearchDataOnly(patientIDA, patientAData, searcher, patientsData, globalPersonSearchHandler.getAllPatientUuid());
                         if (patientIDScoreMap.size() > 0) {
                             patientIDScorePatientIDMap.put(patientAData[5].toString(), patientIDScoreMap);
                         }
@@ -1038,14 +1038,14 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      * @param patientsData selected variables of each patient of the database
      * @param rowData map that contains all the temporary patient'Ids
      */
-    private Map<String, Float> performPersonSearchDataOnly(int patientIDA, Object[] patient, PersonSearcher searcher,
-        Map<Integer, Object[]> patientsData, Object[][] rowData) {
+    private Map<String, Float> performPersonSearchDataOnly(String patientIDA, Object[] patient, PersonSearcher searcher,
+        Map<String, Object[]> patientsData, Object[][] rowData) {
         Map<String, Float> patientIDScoreMap = new TreeMap<>();
         Object[] patientB;
         float threshold = searcher.getThreshold();
         for (Object[] r : rowData) {
-            int patientIDB = (Integer) r[0];
-            if (patientIDB != patientIDA) {
+            String patientIDB = "" + r[0];
+            if (!patientIDB.equals(patientIDA)) {
                 patientB = patientsData.get(patientIDB);
 
                 if (patientB != null) {
@@ -1063,27 +1063,27 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
     private Map<String, Float> performPersonSearch(Patient patient, PersonSearcher searcher, Object[][] rowData) throws RemoteException, SecurityException {
         Map<String, Float> patientIDScoreMap = new TreeMap<>();
         
-        Patient patientB;
+        Patient patient2;
 
-        Object patientIDAObject = patient.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+        Object patient1UUIDObject = patient.getVariable(Globals.PATIENT_TABLE_UUID);
 
-        int patientIDA;
-        if (patientIDAObject != null) {
-            patientIDA = (Integer) patientIDAObject;
+        String patient1UUID;
+        if (patient1UUIDObject != null) {
+            patient1UUID = (String) patient1UUIDObject;
         } else {
-            patientIDA = -1;
+            patient1UUID = "";
         }
 
         float threshold = searcher.getThreshold();
         try {
-            for (Object[] r : rowData) {
-                int patientIDB = (Integer) r[0];
-                if (patientIDB != patientIDA) {
+            for (Object[] r : rowData) { // rowData only contains the patientUuid
+                String patient2UUID = "" + r[0];
+                if (!patient2UUID.equals(patient1UUID)) {
                     try {
-                        patientB = (Patient) getPatient(patientIDB);
-                        float score = searcher.compare(patient, patientB);
+                        patient2 = (Patient) getPatient(patient2UUID);
+                        float score = searcher.compare(patient, patient2);
                         if (score > threshold) {
-                            patientIDScoreMap.put((String) patientB.getVariable(patientRecordIDvariableName), score);
+                            patientIDScoreMap.put((String) patient2.getVariable(patientRecordIDvariableName), score);
                             // debugOut("Found patient id: " + patientB.getVariable(patientRecordIDvariableName) + ", score: " + score + "%");
                         } else {
                             // debugOut("Not found " + patientB.getVariable(patientRecordIDvariableName) + " " + score);
@@ -1110,20 +1110,20 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
      * @throws SQLException
      */
     @Override
-    public synchronized boolean deleteRecord(int id, String tableName)
+    public synchronized boolean deleteRecord(String id, String tableName)
             throws RemoteException, SecurityException, RecordLockedException, SQLException {
         boolean success = false;
         if (tableName.equalsIgnoreCase(Globals.TUMOUR_TABLE_NAME)) {
-            success = currentDAO.deleteTumourRecord(id);
+            success = currentDAO.deleteTumourRecord(Integer.parseInt(id));
         } else if (tableName.equalsIgnoreCase(Globals.PATIENT_TABLE_NAME)) {
             success = currentDAO.deletePatientRecord(id);
         } else if (tableName.equalsIgnoreCase(Globals.SOURCE_TABLE_NAME)) {
-            success = currentDAO.deleteSourceRecord(id);
+            success = currentDAO.deleteSourceRecord(Integer.parseInt(id));
         } else if (tableName.equalsIgnoreCase(Globals.USERS_TABLE_NAME)) {
-            success = currentDAO.deleteRecord(id, Globals.USERS_TABLE_NAME);
+            success = currentDAO.deleteRecord(Integer.parseInt(id), Globals.USERS_TABLE_NAME);
             userManager.writePasswordsToFile();
         } else {
-            success = currentDAO.deleteRecord(id, tableName);
+            success = currentDAO.deleteRecord(Integer.parseInt(id), tableName);
         }
         return success;
     }

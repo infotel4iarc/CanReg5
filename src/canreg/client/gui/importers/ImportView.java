@@ -933,7 +933,7 @@ public class ImportView extends javax.swing.JInternalFrame {
         // Set standard variable names
         io.setMultiplePrimaryVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.MultPrimCode.toString()));
         io.setPatientIDTumourTableVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.PatientIDTumourTable.toString()));
-        io.setPatientIDVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.PatientID.toString()));
+        io.setPatientPRIDVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.PatientID.toString()));
         io.setTumourUpdateDateVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.TumourUpdateDate.toString()));
         io.setPatientUpdateDateVariableName(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.PatientUpdateDate.toString()));
         io.setTumourIDVariablename(globalToolBox.translateStandardVariableNameToDatabaseVariableName(Globals.StandardVariableNames.TumourID.toString()));

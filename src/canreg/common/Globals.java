@@ -300,6 +300,7 @@ public class Globals {
     /**
      *
      */
+    static public String PATIENT_TABLE_UUID = "UUID";
     static public String PATIENT_TABLE_RECORD_ID_VARIABLE_NAME = "PRID";
     static public String PATIENT_TABLE_RECORD_ID_VARIABLE_NAME_FOR_HOLDING = "PATIENTRECORDID";
     /**

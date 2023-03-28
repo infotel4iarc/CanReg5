@@ -126,7 +126,7 @@ public class CanRegClientApp extends SingleFrameApplication {
     private Converter converter;
     private Properties appInfoProperties;
     private String canRegSystemVersionString;
-    private Map<String, Set<Integer>> locksMap;
+    private Map<String, Set<String>> locksMap;
     private LockFile lockFile;
     private static final Logger LOGGER = Logger.getLogger(CanRegClientApp.class.getName());
 
@@ -189,7 +189,7 @@ public class CanRegClientApp extends SingleFrameApplication {
     public void saveUser(User user,boolean addFileReminder) throws SQLException, RemoteException, SecurityException {
         mainServer.saveUser(user,addFileReminder);
     }
-    
+
     private DatabaseRecord getRecordByID(String recordID, String tableName, boolean lock, CanRegServerInterface server)
             throws SQLException, SecurityException, RecordLockedException, 
                    UnknownTableException, DistributedTableDescriptionException, RemoteException {
@@ -199,8 +199,8 @@ public class CanRegClientApp extends SingleFrameApplication {
             String recordIDVariableName = null;
             String databaseRecordIDVariableName = null;
             if (tableName.equalsIgnoreCase(Globals.PATIENT_TABLE_NAME)) {
-                recordIDVariableName = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.PatientRecordID.toString()).getDatabaseVariableName();
-                databaseRecordIDVariableName = Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME;
+                recordIDVariableName = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.UUID.toString()).getDatabaseVariableName();
+                databaseRecordIDVariableName = Globals.PATIENT_TABLE_UUID;
             } else if (tableName.equalsIgnoreCase(Globals.TUMOUR_TABLE_NAME)) {
                 recordIDVariableName = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.TumourID.toString()).getDatabaseVariableName();
                 databaseRecordIDVariableName = Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME;
@@ -222,7 +222,6 @@ public class CanRegClientApp extends SingleFrameApplication {
             releaseResultSet(distributedTableDescription.getResultSetID(), server);
             if (rows.length > 0) {
                 String[] columnNames = distributedTableDescription.getColumnNames();
-                int ids[] = new int[numberOfRecords];
                 boolean found = false;
                 int idColumnNumber = 0;
 
@@ -231,7 +230,7 @@ public class CanRegClientApp extends SingleFrameApplication {
                 }
                 if (found) {
                     idColumnNumber--;
-                    int id = (Integer) rows[0][idColumnNumber];
+                    String id = (String) rows[0][idColumnNumber];
                     record = getRecord(id, tableName, lock, server);
                 }
             }
@@ -366,7 +365,7 @@ public class CanRegClientApp extends SingleFrameApplication {
         dateFormat = new SimpleDateFormat(Globals.DATE_FORMAT_STRING);
 
         // initialize this map
-        locksMap = new TreeMap<String, Set<Integer>>();
+        locksMap = new TreeMap<>();
 
         addExitListener(maybeExit);
         splashMessage(java.util.ResourceBundle.getBundle("canreg/client/resources/CanRegClientApp").getString("FINISHED."), 100);
@@ -770,7 +769,6 @@ public class CanRegClientApp extends SingleFrameApplication {
     /**
      *
      * @param task
-     * @param doc
      * @param map
      * @param files
      * @param io
@@ -1041,7 +1039,7 @@ public class CanRegClientApp extends SingleFrameApplication {
 
     /**
      *
-     * @param recordID
+     * @param recordID if the requested record is a patient, then the recordID is the patient UUID
      * @param tableName
      * @param lock
      * @return
@@ -1049,7 +1047,7 @@ public class CanRegClientApp extends SingleFrameApplication {
      * @throws canreg.server.database.RecordLockedException
      * @throws java.rmi.RemoteException
      */
-    public DatabaseRecord getRecord(int recordID, String tableName, boolean lock, CanRegServerInterface server)
+    public DatabaseRecord getRecord(String recordID, String tableName, boolean lock, CanRegServerInterface server)
             throws SecurityException, RecordLockedException, RemoteException {
         if(server == null)
             server = this.mainServer;
@@ -1077,11 +1075,11 @@ public class CanRegClientApp extends SingleFrameApplication {
      * @throws canreg.server.database.RecordLockedException
      * @throws java.rmi.RemoteException
      */
-    public int saveRecord(DatabaseRecord databaseRecord, CanRegServerInterface server)
+    public String saveRecord(DatabaseRecord databaseRecord, CanRegServerInterface server)
             throws SecurityException, SQLException, RecordLockedException, RemoteException {
         if(server == null)
             server = this.mainServer;
-        int recordNumber = -1;
+        String recordNumber = "";
         try {
             if (databaseRecord != null) {
                 if (databaseRecord instanceof Patient) {
@@ -1093,9 +1091,9 @@ public class CanRegClientApp extends SingleFrameApplication {
                 } else if (databaseRecord instanceof Tumour) {
                     databaseRecord.setVariable(globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.TumourUpdateDate.toString()).getDatabaseVariableName(), dateFormat.format(new Date()));
                     databaseRecord.setVariable(globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.TumourUpdatedBy.toString()).getDatabaseVariableName(), username);
-                    recordNumber = server.saveTumour((Tumour) databaseRecord);
+                    recordNumber = "" + server.saveTumour((Tumour) databaseRecord);
                 } else if (databaseRecord instanceof NameSexRecord) {
-                    recordNumber = server.saveNameSexRecord((NameSexRecord) databaseRecord, true);
+                    recordNumber = "" + server.saveNameSexRecord((NameSexRecord) databaseRecord, true);
                 } else if (databaseRecord instanceof PopulationDataset) {
                     // recordNumber = server.savePopulationDataset((PopulationDataset) databaseRecord);
                 }
@@ -1143,7 +1141,7 @@ public class CanRegClientApp extends SingleFrameApplication {
         }
     }
 
-    public boolean deleteRecord(int id, String tableName, CanRegServerInterface server) 
+    public boolean deleteRecord(String id, String tableName, CanRegServerInterface server)
             throws SecurityException, RecordLockedException, SQLException, RemoteException {
         if(server == null)
             server = this.mainServer;
@@ -1158,7 +1156,7 @@ public class CanRegClientApp extends SingleFrameApplication {
         return false;
     }
 
-    public synchronized void releaseRecord(int recordID, String tableName, CanRegServerInterface server) 
+    public synchronized void releaseRecord(String recordID, String tableName, CanRegServerInterface server)
             throws SecurityException, RemoteException {
         if(server == null)
             server = this.mainServer;
@@ -1302,7 +1300,7 @@ public class CanRegClientApp extends SingleFrameApplication {
             for (int j = 0; j < numberOfRecords; j++) {
                 id = (Integer) rows[j][idColumnNumber];
                 try {
-                    records[j] = (Tumour) getRecord(id, lookUpTableName, lock, server);
+                    records[j] = (Tumour) getRecord(""+id, lookUpTableName, lock, server);
                 } catch (RecordLockedException recordLockedException) {
                    LOGGER.log(Level.WARNING,String.format("Tumour record  %d already locked ?",id), recordLockedException);
 //                    throw recordLockedException;
@@ -1359,7 +1357,7 @@ public class CanRegClientApp extends SingleFrameApplication {
                 for (int j = 0; j < numberOfRecords; j++) {
                     try {
                         id = (Integer) rows[j][idColumnNumber];
-                        records[j] = (Tumour) getRecord(id, lookUpTableName, lock, server);
+                        records[j] = (Tumour) getRecord(""+id, lookUpTableName, lock, server);
                     } catch (RemoteException ex) {
                        LOGGER.log(Level.SEVERE, null, ex);
                         if (!handlePotentialDisconnect(ex)) {
@@ -1688,17 +1686,13 @@ public class CanRegClientApp extends SingleFrameApplication {
         }
     }
 
-    private synchronized void lockRecord(int recordID, String tableName) {
-        Set lockSet = locksMap.get(tableName);
-        if (lockSet == null) {
-            lockSet = new TreeSet<>();
-            locksMap.put(tableName, lockSet);
-        }
+    private synchronized void lockRecord(String recordID, String tableName) {
+        Set<String> lockSet = locksMap.computeIfAbsent(tableName, k -> new TreeSet<>());
         lockSet.add(recordID);
         lockFile.writeMap();
     }
 
-    public Patient[] getPatientsByPatientID(String patientID, boolean lock, CanRegServerInterface server) 
+    public Patient[] getPatientsByPatientID(String patientUUID, boolean lock, CanRegServerInterface server)
             throws SQLException, SecurityException, RecordLockedException, 
                    UnknownTableException, DistributedTableDescriptionException, RemoteException {
         if(server == null)
@@ -1709,10 +1703,10 @@ public class CanRegClientApp extends SingleFrameApplication {
             String databaseRecordIDVariableName;
             String tableName = Globals.PATIENT_TABLE_NAME;
             String patientIDVariableName = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.PatientID.toString()).getDatabaseVariableName();
-            databaseRecordIDVariableName = Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME;
+            databaseRecordIDVariableName = Globals.PATIENT_TABLE_UUID;
 
             DatabaseFilter filter = new DatabaseFilter();
-            filter.setFilterString(patientIDVariableName + " = '" + patientID + "' ");
+            filter.setFilterString(patientIDVariableName + " = '" + patientUUID + "' ");
             DistributedTableDescription distributedTableDescription;
             Object[][] rows;
             DatabaseRecord record = null;
@@ -1736,8 +1730,8 @@ public class CanRegClientApp extends SingleFrameApplication {
                 if (found) {
                     idColumnNumber--;
                     for (int recordNo = 0; recordNo < numberOfRecords; recordNo++) {
-                        int id = (Integer) rows[recordNo][idColumnNumber];
-                        records[recordNo] = (Patient) getRecord(id, Globals.PATIENT_TABLE_NAME, lock, server);
+                        String uuid = (String) rows[recordNo][idColumnNumber];
+                        records[recordNo] = (Patient) getRecord(uuid, Globals.PATIENT_TABLE_NAME, lock, server);
                     }
                 }
             }
@@ -1754,7 +1748,7 @@ public class CanRegClientApp extends SingleFrameApplication {
     private synchronized int numberOfRecordsOpen() {
         int numberOfRecords = 0;
         for (String tableName : locksMap.keySet()) {
-            Set<Integer> lockSet = locksMap.get(tableName);
+            Set<String> lockSet = locksMap.get(tableName);
             if(lockSet != null)
                 numberOfRecords += lockSet.size();
         }

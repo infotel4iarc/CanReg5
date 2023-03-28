@@ -905,7 +905,7 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
                     idColumnNumber--;
                     for (int j = 0; j < numberOfRecords; j++) {
                         ids[j] = (Integer) rows[j][idColumnNumber];
-                        record = CanRegClientApp.getApplication().getRecord(ids[j], Globals.TUMOUR_TABLE_NAME, false, server);
+                        record = CanRegClientApp.getApplication().getRecord(""+ids[j], Globals.TUMOUR_TABLE_NAME, false, server);
                         editPatientID((String) record.getVariable(patientIDTumourTablelookupVariable));
                     }
                 } else {
@@ -1002,16 +1002,16 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
                         int columnNumber = tableColumnModel.getColumnIndex(canreg.common.Tools.toUpperCaseStandardized(patientRecordIDVariable), false);
                         String holdingPatientRecordID = (String) tableDataModel.getValueAt(rowNumber, columnNumber);
                         Patient patientToImport = CanRegClientApp.getApplication().getPatientRecord(holdingPatientRecordID, false, server);
-                        int productionPRID = Import.importPatient(CanRegClientApp.getApplication().getServer(), result, 
+                        String productionPatientUUID = Import.importPatient(CanRegClientApp.getApplication().getServer(), result,
                                 holdingPatientRecordID, patientToImport, reportWriter, false, false, true);
 
                         Tumour[] tumourRecords = CanRegClientApp.getApplication().getTumourRecordsBasedOnPatientRecordID(holdingPatientRecordID, false, server);
                         for(Tumour tumourToImport : tumourRecords) {
                             String tumourID = tumourToImport.getVariableAsString(tumourIDlookupVariable);
                             
-                            if(productionPRID != -1) {
+                            if(!productionPatientUUID.equals("")) {
                                 Patient productionPatient = (Patient) CanRegClientApp.getApplication().getServer()
-                                        .getRecord(productionPRID, Globals.PATIENT_TABLE_NAME, false, server.hashCode());
+                                        .getRecord(productionPatientUUID, Globals.PATIENT_TABLE_NAME, false, server.hashCode());
                                 holdingPatientRecordID = productionPatient.getVariableAsString(patientRecordIDVariable);
                                 
                                 String tumourIDVariableName = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.TumourID.toString()).getDatabaseVariableName();
@@ -1071,12 +1071,12 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
     
     private boolean deleteRecord(DatabaseRecord record) {
         boolean success = false;
-        int id = -1;
+        String id = "";
         String tableName = null;
         if (record instanceof Patient) {
-            Object idObject = record.getVariable(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+            Object idObject = record.getVariable(Globals.PATIENT_TABLE_UUID);
             if (idObject != null) 
-                id = (Integer) idObject;            
+                id = (String) idObject;
             tableName = Globals.PATIENT_TABLE_NAME;
         } else if (record instanceof Tumour) {
             // delete sources first.
@@ -1086,18 +1086,18 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
             
             Object idObject = record.getVariable(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
             if (idObject != null) 
-                id = (Integer) idObject;            
+                id = (String) idObject;
             tableName = Globals.TUMOUR_TABLE_NAME;
         } else if (record instanceof Source) {
             Object idObject = record.getVariable(Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME);
             if (idObject != null) 
-                id = (Integer) idObject;            
+                id = (String) idObject;
             tableName = Globals.SOURCE_TABLE_NAME;
         }
-        if (id >= 0) {
+        if (!id.equals("")) {
             try {
-                canreg.client.CanRegClientApp.getApplication().releaseRecord(id, tableName, server);
-                success = canreg.client.CanRegClientApp.getApplication().deleteRecord(id, tableName, server);
+                canreg.client.CanRegClientApp.getApplication().releaseRecord("" + id, tableName, server);
+                success = canreg.client.CanRegClientApp.getApplication().deleteRecord("" + id, tableName, server);
             } catch (Exception ex) {
                LOGGER.log(Level.SEVERE, null, ex);
                 new TechnicalError().errorDialog();

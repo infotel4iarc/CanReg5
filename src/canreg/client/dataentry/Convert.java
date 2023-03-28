@@ -22,11 +22,9 @@
 package canreg.client.dataentry;
 
 import canreg.client.gui.importers.ImportOptions;
-import canreg.client.gui.importers.Import;
 import canreg.client.gui.tools.globalpopup.TechnicalError;
 import canreg.common.Globals;
 import canreg.client.CanRegClientApp;
-import canreg.client.gui.importers.ImportView;
 import canreg.server.management.SystemDescription;
 import canreg.server.CanRegServerInterface;
 import canreg.server.database.*;
@@ -377,7 +375,7 @@ public class Convert {
 
         Set<String> noNeedToLookAtPatientVariables = new TreeSet<>();
 
-        noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientIDVariableName()));
+        noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientPRIDVariableName()));
         noNeedToLookAtPatientVariables.add(canreg.common.Tools.toLowerCaseStandardized(io.getPatientRecordIDVariableName()));
 
         String firstNameVariableName = io.getFirstNameVariableName();
@@ -413,7 +411,7 @@ public class Convert {
                 numberOfLinesRead++;
                 // We allow for null tasks...
                 boolean needToSavePatientAgain = true;
-                int patientDatabaseRecordID = -1;
+                String patientUUID = "";
 
                 if (task != null) {
                     if (canreg.client.gui.management.CanReg4MigrationInternalFrame.isPaused) {
@@ -507,16 +505,17 @@ public class Convert {
 
                 // debugOut(tumour.toString());
                 // add patient to the database
-                Object patientID = patient.getVariable(io.getPatientIDVariableName());
+                Object patientUIID = patient.getVariable(io.getPatientUUIDVariableName());
+                Object patientPRID = patient.getVariable(io.getPatientPRIDVariableName());
                 Object patientRecordID = patient.getVariable(io.getPatientRecordIDVariableName());
 
-                if (patientID == null) {
+                if (patientUIID == null) {
                     // save the record to get the new patientID;
-                    patientDatabaseRecordID = server.savePatient(patient);
+                    patientUUID = server.savePatient(patient);
 
                     //We can put CanRegServerInterface parameter as null because the lock is false
-                    patient = (Patient) server.getRecord(patientDatabaseRecordID, Globals.PATIENT_TABLE_NAME, false, null);
-                    patientID = patient.getVariable(io.getPatientIDVariableName());
+                    patient = (Patient) server.getRecord(patientUUID, Globals.PATIENT_TABLE_NAME, false, null);
+                    patientPRID = patient.getVariable(io.getPatientPRIDVariableName());
                     patientRecordID = patient.getVariable(io.getPatientRecordIDVariableName());
                 }
 
@@ -533,17 +532,17 @@ public class Convert {
                     while (tumourSequenceString.length() < Globals.ADDITIONAL_DIGITS_FOR_PATIENT_RECORD) {
                         tumourSequenceString = "0" + tumourSequenceString;
                     }
-                    patientRecordID = patientID + "" + tumourSequenceString;
+                    patientRecordID = patientPRID + "" + tumourSequenceString;
 
                     // If this is a multiple primary tumour...
                     String mpCodeString = (String) tumour.getVariable(io.getMultiplePrimaryVariableName());
                     if (mpCodeString != null && mpCodeString.length() > 0) {
-                        patientID = lookUpPatientID(mpCodeString, patientID, mpCodes);
+                        patientPRID = lookUpPatientID(mpCodeString, patientPRID, mpCodes);
 
                         // rebuild sequenceNumber
                         Tumour[] tumours = new Tumour[0];
                         try {
-                            tumours = CanRegClientApp.getApplication().getTumourRecordsBasedOnPatientID(patientID + "", false, null);
+                            tumours = CanRegClientApp.getApplication().getTumourRecordsBasedOnPatientID(patientPRID + "", false, null);
                         }
                         catch (Exception ex) {
                             LOGGER.log(Level.SEVERE, null, ex);
@@ -555,10 +554,10 @@ public class Convert {
                             tumourSequenceString = "0" + tumourSequenceString;
                         }
 
-                        patientRecordID = patientID + "" + tumourSequenceString;
+                        patientRecordID = patientPRID + "" + tumourSequenceString;
                         Patient[] oldPatients = null;
                         try {
-                            oldPatients = CanRegClientApp.getApplication().getPatientsByPatientID((String) patientID, false, null);
+                            oldPatients = CanRegClientApp.getApplication().getPatientsByPatientID((String) patientPRID, false, null);
                         } catch (Exception ex) {
                             LOGGER.log(Level.SEVERE, null, ex);
                             new TechnicalError().errorDialog();
@@ -574,14 +573,14 @@ public class Convert {
 
                     Object tumourID = patientRecordID + "" + tumourSequenceString;
                     //
-                    patient.setVariable(io.getPatientIDVariableName(), patientID);
+                    patient.setVariable(io.getPatientPRIDVariableName(), patientPRID);
                     tumour.setVariable(io.getTumourIDVariablename(), tumourID);
                     // And store the record ID
 
                     patient.setVariable(io.getPatientRecordIDVariableName(), patientRecordID);
 
                     // Set the patient ID number on the tumour
-                    tumour.setVariable(io.getPatientIDTumourTableVariableName(), patientID);
+                    tumour.setVariable(io.getPatientIDTumourTableVariableName(), patientPRID);
                     tumour.setVariable(io.getPatientRecordIDTumourTableVariableName(), patientRecordID);
 
                     // Set the deprecated flag to 0 - no obsolete records from CR4
@@ -626,10 +625,10 @@ public class Convert {
                 }
 
                 if (needToSavePatientAgain) {
-                    if (patientDatabaseRecordID > 0) {
-                        server.editPatient(patient);
+                    if (patientUUID.equals("")) {
+                        patientUUID = server.savePatient(patient);
                     } else {
-                        patientDatabaseRecordID = server.savePatient(patient);
+                        server.editPatient(patient);
                     }
                 }
                 if (patient != null && tumour != null) {
@@ -640,7 +639,7 @@ public class Convert {
                     }
                 }
                 if (tumour.getVariable(io.getPatientIDTumourTableVariableName()) == null) {
-                    tumour.setVariable(io.getPatientIDTumourTableVariableName(), patientID);
+                    tumour.setVariable(io.getPatientIDTumourTableVariableName(), patientPRID);
                 }
 
                 if (tumour.getVariable(io.getPatientRecordIDTumourTableVariableName()) == null) {
@@ -689,7 +688,7 @@ public class Convert {
     /**
      * Simple console trace to system.out for debug purposes only.
      *
-     * @param message the message to be printed to the console
+     * @param msg the message to be printed to the console
      */
     private static void debugOut(String msg) {
         if (debug) {

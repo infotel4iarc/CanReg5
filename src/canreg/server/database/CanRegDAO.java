@@ -143,7 +143,7 @@ public class CanRegDAO {
         activeStatements = new LinkedHashMap<String, Statement>();
         dictionaryMap = buildDictionaryMap(doc);
 
-        locksMap = new TreeMap<String, Set<Integer>>();
+        locksMap = new TreeMap<>();
 
         debugOut(canreg.server.xml.Tools.getTextContent(
                 new String[]{ns + "canreg", ns + "general", ns + "registry_name"}, doc));
@@ -622,14 +622,15 @@ public class CanRegDAO {
         distributedDataSources.remove(resultSetID);
     }
 
-    public synchronized DatabaseRecord getRecord(int recordID, String tableName, boolean lock) throws RecordLockedException {
+    public synchronized DatabaseRecord getRecord(String recordID, String tableName, boolean lock) throws RecordLockedException {
         DatabaseRecord returnRecord;
         if (tableName.equalsIgnoreCase(Globals.PATIENT_TABLE_NAME)) {
+            // in this case, recordID is the UUID, not the PRID
             returnRecord = getPatient(recordID, lock);
         } else if (tableName.equalsIgnoreCase(Globals.TUMOUR_TABLE_NAME)) {
-            returnRecord = getTumour(recordID, lock);
+            returnRecord = getTumour(Integer.parseInt(recordID), lock);
         } else if (tableName.equalsIgnoreCase(Globals.SOURCE_TABLE_NAME)) {
-            returnRecord = getSource(recordID, lock);
+            returnRecord = getSource(Integer.parseInt(recordID), lock);
         } else {
             returnRecord = null;
         }
@@ -1051,8 +1052,7 @@ public class CanRegDAO {
         }
         return dbUrl;
     }
-
-    private synchronized int saveRecord(String tableName, DatabaseRecord record, PreparedStatement stmtSaveNewRecord) throws SQLException {
+    private synchronized String saveRecord(String tableName, DatabaseRecord record, PreparedStatement stmtSaveNewRecord) throws SQLException {
         int id = -1;
         stmtSaveNewRecord.clearParameters();
 
@@ -1120,10 +1120,10 @@ public class CanRegDAO {
             id = results.getInt(1);
         }
 
-        return id;
+        return (record instanceof Patient) ? record.getUuid().toString() : "" + id;
     }
 
-    public synchronized int savePatient(Patient patient)
+    public synchronized String savePatient(Patient patient)
             throws SQLException {
 
         DatabaseVariablesListElement patientIDVariable = globalToolBox.translateStandardVariableNameToDatabaseListElement(Globals.StandardVariableNames.PatientID.toString());
@@ -1188,7 +1188,7 @@ public class CanRegDAO {
         // save tumour before we save the sources...
         try (Connection connection = getDbConnection();
              PreparedStatement stmtSaveNewTumour = connection.prepareStatement(strSaveTumour, Statement.RETURN_GENERATED_KEYS)) {
-            int id = saveRecord(Globals.TUMOUR_TABLE_NAME, tumour, stmtSaveNewTumour);
+            int id = Integer.parseInt(saveRecord(Globals.TUMOUR_TABLE_NAME, tumour, stmtSaveNewTumour));
 
             Set<Source> sources = tumour.getSources();
             // delete old sources ## DEPRECATED
@@ -1225,9 +1225,9 @@ public class CanRegDAO {
                 String tumourID = (String) source.getVariable(tumourIDVariableName);
                 sourceID = getNextSourceID(tumourID);
                 source.setVariable(sourceIDVariableName, sourceID);
-                id = saveRecord(Globals.SOURCE_TABLE_NAME, source, stmtSaveNewSource);
+                id = Integer.parseInt(saveRecord(Globals.SOURCE_TABLE_NAME, source, stmtSaveNewSource));
             } else if (sourceRecordID == null || sourceRecordID.toString().trim().length() == 0) {
-                id = saveRecord(Globals.SOURCE_TABLE_NAME, source, stmtSaveNewSource);
+                id = Integer.parseInt(saveRecord(Globals.SOURCE_TABLE_NAME, source, stmtSaveNewSource));
             } else {
                 boolean success = editRecord(Globals.SOURCE_TABLE_NAME, source, stmtEditSource,
                         canreg.common.Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME);
@@ -1476,15 +1476,15 @@ public class CanRegDAO {
         return success;
     }
 
-    public synchronized boolean deletePatientRecord(int patientRecordID) throws RecordLockedException, SQLException {
+    public synchronized boolean deletePatientRecord(String patientUuid) throws RecordLockedException, SQLException {
         boolean success = false;
-        if (isRecordLocked(patientRecordID, Globals.PATIENT_TABLE_NAME)) {
+        if (isRecordLocked(patientUuid, Globals.PATIENT_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
              PreparedStatement stmtDeletePatientRecord = connection.prepareStatement(STR_DELETE_PATIENT_RECORD)) {
             stmtDeletePatientRecord.clearParameters();
-            stmtDeletePatientRecord.setInt(1, patientRecordID);
+            stmtDeletePatientRecord.setString(1, patientUuid);
             stmtDeletePatientRecord.executeUpdate();
             success = true;
         } catch (SQLException sqle) {
@@ -1495,7 +1495,7 @@ public class CanRegDAO {
 
     public synchronized boolean deleteTumourRecord(int tumourRecordID) throws RecordLockedException {
         boolean success = false;
-        if (isRecordLocked(tumourRecordID, Globals.TUMOUR_TABLE_NAME)) {
+        if (isRecordLocked("" + tumourRecordID, Globals.TUMOUR_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
@@ -1512,7 +1512,7 @@ public class CanRegDAO {
 
     public synchronized boolean deleteSourceRecord(int sourceRecordID) throws RecordLockedException {
         boolean success = false;
-        if (isRecordLocked(sourceRecordID, Globals.SOURCE_TABLE_NAME)) {
+        if (isRecordLocked("" + sourceRecordID, Globals.SOURCE_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
@@ -1529,10 +1529,10 @@ public class CanRegDAO {
 
     public synchronized boolean deleteRecord(int recordID, String tableName) throws RecordLockedException, SQLException {
         boolean success = false;
-        if (isRecordLocked(recordID, tableName)) {
+        if (isRecordLocked("" + recordID, tableName)) {
             throw new RecordLockedException();
         } else if (tableName.equalsIgnoreCase(Globals.PATIENT_TABLE_NAME)) {
-            success = deletePatientRecord(recordID);
+            success = deletePatientRecord("" + recordID);
         } else if (tableName.equalsIgnoreCase(Globals.TUMOUR_TABLE_NAME)) {
             success = deleteTumourRecord(recordID);
         } else if (tableName.equalsIgnoreCase(Globals.SOURCE_TABLE_NAME)) {
@@ -1740,7 +1740,7 @@ public class CanRegDAO {
                 idInt = (Integer) record.getVariable(idString);
             }
 
-            if (isRecordLocked(idInt, tableName))
+            if (isRecordLocked("" + idInt, tableName))
                 throw new RecordLockedException();
 
             stmtEditRecord.setInt(variableNumber + 1, idInt);
@@ -1926,17 +1926,17 @@ public class CanRegDAO {
     }
 
 
-    private synchronized Patient getPatient(int recordID, boolean lock) throws RecordLockedException {
+    private synchronized Patient getPatient(String patientUUID, boolean lock) throws RecordLockedException {
         Patient record = null;
         ResultSetMetaData metadata;
         // we are allowed to read a record that is locked...
-        if (lock && checkAndLockRecord(recordID, Globals.PATIENT_TABLE_NAME)) {
+        if (lock && checkAndLockRecord(patientUUID, Globals.PATIENT_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
              PreparedStatement stmtGetPatient = connection.prepareStatement(STR_GET_PATIENT)) {
             stmtGetPatient.clearParameters();
-            stmtGetPatient.setInt(1, recordID);
+            stmtGetPatient.setString(1, patientUUID);
             ResultSet result = stmtGetPatient.executeQuery();
             metadata = result.getMetaData();
             int numberOfColumns = metadata.getColumnCount();
@@ -2165,7 +2165,7 @@ public class CanRegDAO {
     private synchronized Tumour getTumour(int recordID, boolean lock) throws RecordLockedException {
         Tumour record = null;
         ResultSetMetaData metadata;
-        if (lock && checkAndLockRecord(recordID, Globals.TUMOUR_TABLE_NAME)) {
+        if (lock && checkAndLockRecord(""+recordID, Globals.TUMOUR_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
@@ -2254,7 +2254,7 @@ public class CanRegDAO {
     private synchronized Source getSource(int recordID, boolean lock) throws RecordLockedException {
         Source record = null;
         ResultSetMetaData metadata;
-        if (lock && checkAndLockRecord(recordID, Globals.SOURCE_TABLE_NAME)) {
+        if (lock && checkAndLockRecord(""+recordID, Globals.SOURCE_TABLE_NAME)) {
             throw new RecordLockedException();
         }
         try (Connection connection = getDbConnection();
@@ -2476,7 +2476,7 @@ public class CanRegDAO {
                 idColumnNumber--;
                 Source source;
                 for (Object[] row : rows) {
-                    int id = (Integer) row[idColumnNumber];
+                    String id = "" + row[idColumnNumber];
                     source = (Source) getRecord(id, Globals.SOURCE_TABLE_NAME, lock);
                     sources.add(source);
                 }
@@ -2504,7 +2504,7 @@ public class CanRegDAO {
     private final String registryCode;
     private final Document doc;
     private Map<Integer, Dictionary> dictionaryMap;
-    private final Map<String, Set<Integer>> locksMap;
+    private final Map<String, Set<String>> locksMap;
     private final Map<String, DistributedTableDataSource> distributedDataSources;
     private final Map<String, Statement> activeStatements;
     private boolean tableOfDictionariesFilled = true;
@@ -2517,7 +2517,7 @@ public class CanRegDAO {
     private final String sourceRecordIDVariableName;
     private static final String STR_GET_PATIENT
             = "SELECT * FROM APP.PATIENT "
-            + "WHERE " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " = ?";
+            + "WHERE " + Globals.PATIENT_TABLE_UUID + " = ?";
     private static final String STR_GET_PATIENT_BY_PATIENT_RECORD_ID = "SELECT * FROM APP.PATIENT WHERE PATIENTRECORDID = ?";
     private static final String STR_GET_PATIENTS
             = "SELECT * FROM APP.PATIENT";
@@ -2562,7 +2562,7 @@ public class CanRegDAO {
 
     private static final String STR_DELETE_PATIENT_RECORD
             = "DELETE FROM APP.PATIENT "
-            + "WHERE " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " = ?";
+            + "WHERE " + Globals.PATIENT_TABLE_UUID + " = ?";
     private static final String STR_DELETE_SOURCE_RECORD
             = "DELETE FROM APP.SOURCE "
             + "WHERE " + Globals.SOURCE_TABLE_RECORD_ID_VARIABLE_NAME + " = ?";
@@ -2637,9 +2637,9 @@ public class CanRegDAO {
         }
     }
 
-    public synchronized void releaseRecord(int recordID, String tableName) {
+    public synchronized void releaseRecord(String recordID, String tableName) {
         // release a locked record
-        Set lockSet = locksMap.get(tableName);
+        Set<String> lockSet = locksMap.get(tableName);
         if (lockSet != null) {
             lockSet.remove(recordID);
         }
@@ -2653,9 +2653,9 @@ public class CanRegDAO {
      * @param tableName name of  the table in the database
      * @return true if the record was already locked, else false
      */
-    private synchronized boolean checkAndLockRecord(int recordID, String tableName) {
+    private synchronized boolean checkAndLockRecord(String recordID, String tableName) {
         boolean wasLocked = false;
-        Set<Integer> lockSet = locksMap.get(tableName);
+        Set<String> lockSet = locksMap.get(tableName);
         // if the wasLocked set is null create a new wasLocked set
         if (lockSet == null) {
             lockSet = new TreeSet<>();
@@ -2669,9 +2669,9 @@ public class CanRegDAO {
         return wasLocked;
     }
 
-    private synchronized boolean isRecordLocked(int recordID, String tableName) {
+    private synchronized boolean isRecordLocked(String recordID, String tableName) {
         boolean lock = false;
-        Set lockSet = locksMap.get(tableName);
+        Set<String> lockSet = locksMap.get(tableName);
         if (lockSet != null) {
             lock = lockSet.contains(recordID);
         }
@@ -2726,7 +2726,7 @@ public class CanRegDAO {
         }
         countRowSet = null;
 
-        query = "SELECT " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " FROM APP.PATIENT" + rangePart;
+        query = "SELECT " + Globals.PATIENT_TABLE_UUID + " FROM APP.PATIENT" + rangePart;
         try {
             result = statement.executeQuery(query);
         } catch (java.sql.SQLSyntaxErrorException ex) {

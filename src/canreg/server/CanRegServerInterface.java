@@ -172,7 +172,7 @@ public interface CanRegServerInterface extends Remote {
      * @throws java.lang.SecurityException
      * @throws RecordLockedException
      */
-    public DatabaseRecord getRecord(int recordID, String tableName, boolean lock, Integer remoteHashCode)
+    public DatabaseRecord getRecord(String recordID, String tableName, boolean lock, Integer remoteHashCode)
             throws RemoteException, SecurityException, RecordLockedException ;
 
     // administrative tools
@@ -215,7 +215,7 @@ public interface CanRegServerInterface extends Remote {
      * @throws RecordLockedException
      * @throws SQLException
      */
-    public boolean deleteRecord(int id, String tableName)
+    public boolean deleteRecord(String id, String tableName)
             throws RemoteException, SecurityException, RecordLockedException, SQLException;
 
     /**
@@ -291,7 +291,7 @@ public interface CanRegServerInterface extends Remote {
      * @throws SQLException
      * @throws RecordLockedException
      */
-    public int savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException;
+    public String savePatient(Patient patient) throws RemoteException, SecurityException, SQLException, RecordLockedException;
 
     /**
      * 
@@ -411,7 +411,7 @@ public interface CanRegServerInterface extends Remote {
      * @throws RemoteException
      * @throws SecurityException
      */
-    public void releaseRecord(int recordID, String tableName, Integer remoteHashCode) throws RemoteException, SecurityException;
+    public void releaseRecord(String recordID, String tableName, Integer remoteHashCode) throws RemoteException, SecurityException;
 
     /**
      * Get the population datasets
