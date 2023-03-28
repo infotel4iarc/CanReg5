@@ -145,8 +145,10 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         
         if(this.server == null) {
             this.holdingOptions.setVisible(false);
+        } else {
+          this.deleteEmptyButton.setVisible(false);
         }
-        
+
         pack();
     }
     ///
@@ -177,7 +179,7 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         selectAllChkBox = new javax.swing.JCheckBox();
         productionBtn = new javax.swing.JButton();
         deleteHoldingBtn = new javax.swing.JButton();
-
+        deleteEmptyButton = new javax.swing.JButton();
 
         setClosable(true);
         setMaximizable(true);
@@ -256,7 +258,13 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         editTumourNumberButton.setText(resourceMap.getString("editTumourNumberButton.text")); // NOI18N
         editTumourNumberButton.setName("editTumourNumberButton"); // NOI18N
 
-
+        deleteEmptyButton.setText(org.jdesktop.application.Application.getInstance(canreg.client.CanRegClientApp.class).getContext().getResourceMap(BrowseInternalFrame.class).getString("jButton1.text")); // NOI18N
+        deleteEmptyButton.setName("deleteEmptyButton"); // NOI18N
+        deleteEmptyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteEmptyButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout buttonsPanelLayout = new javax.swing.GroupLayout(buttonsPanel);
         buttonsPanel.setLayout(buttonsPanelLayout);
@@ -268,7 +276,7 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
             .addComponent(patientNumberTextField, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(editTumourNumberButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tumourNumberTextField)
-
+            .addComponent(deleteEmptyButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         buttonsPanelLayout.setVerticalGroup(
             buttonsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -285,6 +293,7 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tumourNumberTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(deleteEmptyButton)
                 .addContainerGap(32, Short.MAX_VALUE))
         );
 
@@ -513,7 +522,15 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
             resultTable.clearSelection();
     }//GEN-LAST:event_selectAllChkBoxActionPerformed
 
-
+    private void deleteEmptyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        /*String[] columNames;
+        try {
+            columNames =  tableDataSource.getTableDescription().getColumnNames();
+        } catch (DistributedTableDescriptionException e) {
+            throw new RuntimeException(e);
+        }*/
+        CanRegClientApp.getApplication().deleteEmptyRecords(server);
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     private void rowClicked(java.awt.event.MouseEvent evt) {
         String referenceTable;
@@ -945,6 +962,7 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
     private javax.swing.JButton editTableRecordButton;
     private javax.swing.JButton editTumourNumberButton;
     private javax.swing.JPanel holdingOptions;
+    private javax.swing.JButton deleteEmptyButton;
     private javax.swing.JPanel mainPanel;
     private canreg.client.gui.components.NavigationPanel navigationPanel;
     private javax.swing.JTextField patientNumberTextField;
