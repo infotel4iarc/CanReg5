@@ -3034,47 +3034,39 @@ public class CanRegDAO {
         return success;
     }
 
-    public void deleteEmptyRecords(){
-        ResultSet result;
-
-        DatabaseFilter filter = new DatabaseFilter();
-        filter.setQueryType(DatabaseFilter.QueryType.BROWSER);
+    public synchronized void deleteEmptyRecords(){
+        // ResultSet result;
 
         StringBuilder filterStrBuilder = new StringBuilder();
         filterStrBuilder.append(strGetPatientsAndTumours)
                 .append(" AND ").append("FAMN").append(" = ''")
                 .append(" AND ").append("FIRSTN").append(" = ''")
                 .append(" AND ").append("AGE").append(" = ").append(-1);
-        filter.setFilterString(filterStrBuilder.toString());
 
-        int rowCount;
-        String[] columnNames;
+        try (Statement statement = dbConnection.createStatement();
+             ResultSet result = statement.executeQuery(filterStrBuilder.toString());
+             ){
+            boolean tumourDeleted;
+            int tumourId;
+            int patientId;
+            String tumourIdSourceTable;
+            Set<Integer> patientIdsToDelete = new HashSet<>();
 
-        try (Statement statement = dbConnection.createStatement();){
-            result = statement.executeQuery(filterStrBuilder.toString());
-            dbConnection.setAutoCommit(false);
+
             while (result.next()){
-                int patientId = result.getInt(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
-                int tumourId = result.getInt(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+                tumourDeleted = false;
+                patientId = result.getInt(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                tumourId = result.getInt(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+                tumourIdSourceTable = result.getString(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME_FOR_HOLDING);
 
-
-
-                /*rowCount = result.getRow(); // get the row number of the last element as rowCount
-                result.beforeFirst(); // reset the cursor to first element
-
-                DistributedTableDataSource dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
-                columnNames = dataSource.getTableDescription().getColumnNames(); */
-
-                deleteSources(tumourId);
-
-
-                boolean tumourDeleted = deleteTumourRecord(tumourId);
-                if(tumourDeleted){
-                    deletePatientRecord(patientId);
+                deleteSources(tumourIdSourceTable);
+                tumourDeleted = deleteTumourRecord(tumourId);
+                if(tumourDeleted) {
+                    patientIdsToDelete.add(patientId);
                 }
-
-
-
+            }
+            for (int id : patientIdsToDelete){
+                deletePatientRecord(id);
 
             }
         } catch (SQLException e) {
@@ -3087,24 +3079,6 @@ public class CanRegDAO {
             throw new RuntimeException(e);
         }
 
-
-        /*int rowCount;
-        String[] columnNames;
-        try {
-            if (result.last()) {    
-                rowCount = result.getRow(); // get the row number of the last element as rowCount    
-                result.beforeFirst(); // reset the cursor to first element
-    
-            DistributedTableDataSource dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
-            columnNames = dataSource.getTableDescription().getColumnNames();
-
-
-        }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (DistributedTableDescriptionException e) {
-            throw new RuntimeException(e);
-        }*/
     }
 
         public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
