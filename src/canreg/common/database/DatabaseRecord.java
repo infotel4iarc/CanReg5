@@ -130,9 +130,9 @@ public class DatabaseRecord implements Serializable //   Commented away to be ab
         Object obj = getVariable("uuid");
         if (obj != null && !obj.toString().equals("")) {
             try {
-                if (UUID.fromString(obj.toString()).equals(obj))
-                    return UUID.fromString(obj.toString());
+                return UUID.fromString(obj.toString());
             } catch (IllegalArgumentException e) {
+                // if this is not a UUID
                 return null;
             }
         }
