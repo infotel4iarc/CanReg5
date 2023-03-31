@@ -13,4 +13,12 @@ public class TechnicalError {
                 .getString("ERROR HEADER"),
             JOptionPane.ERROR_MESSAGE);
     }
+    public void errorDialog(String message){
+        JOptionPane.showMessageDialog(null,
+            message,
+            java.util.ResourceBundle
+                .getBundle("canreg/client/gui/tools/globalpopup/resources/globalpopup")
+                .getString("ERROR HEADER"),
+            JOptionPane.ERROR_MESSAGE);
+    }
 }
