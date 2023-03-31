@@ -258,6 +258,7 @@ public final class CanRegClientView extends FrameView {
         usersMenuItem = new javax.swing.JMenuItem();
         jSeparator10 = new javax.swing.JSeparator();
         advancedMenu = new javax.swing.JMenu();
+        jMenuItem19 = new javax.swing.JMenuItem();
         jMenuItem18 = new javax.swing.JMenuItem();
         jMenuItem16 = new javax.swing.JMenuItem();
         jMenuItem17 = new javax.swing.JMenuItem();
@@ -552,6 +553,10 @@ public final class CanRegClientView extends FrameView {
         jMenuItem17.setText(resourceMap.getString("stopDBMenuItem.text")); // NOI18N
         jMenuItem17.setName("stopDBMenuItem"); // NOI18N
         advancedMenu.add(jMenuItem17);
+
+        jMenuItem19.setAction(actionMap.get("deleteEmptyRecords")); // NOI18N
+        jMenuItem19.setName("deleteEmptyRecordsMenuItem"); // NOI18N
+        advancedMenu.add(jMenuItem19);
 
         managementMenu.add(advancedMenu);
 
@@ -1050,6 +1055,11 @@ public final class CanRegClientView extends FrameView {
             LOGGER.log(Level.SEVERE, null, ex);
             new TechnicalError().errorDialog();
         }
+    }
+
+    @Action
+    public void deleteEmptyRecords(){
+        CanRegClientApp.getApplication().deleteEmptyRecords(null);
     }
 
 
@@ -1900,6 +1910,7 @@ public final class CanRegClientView extends FrameView {
     private javax.swing.JMenuItem jMenuItem16;
     private javax.swing.JMenuItem jMenuItem17;
     private javax.swing.JMenuItem jMenuItem18;
+    private javax.swing.JMenuItem jMenuItem19;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;

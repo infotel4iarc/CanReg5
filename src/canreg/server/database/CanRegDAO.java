@@ -3035,13 +3035,31 @@ public class CanRegDAO {
     }
 
     public synchronized void deleteEmptyRecords(){
-        // ResultSet result;
 
         StringBuilder filterStrBuilder = new StringBuilder();
         filterStrBuilder.append(strGetPatientsAndTumours)
                 .append(" AND ").append("FAMN").append(" = ''")
+                .append(" AND ").append("MIDN").append(" = ''")
+                .append(" AND ").append("MAIDN").append(" = ''")
                 .append(" AND ").append("FIRSTN").append(" = ''")
-                .append(" AND ").append("AGE").append(" = ").append(-1);
+                .append(" AND ").append("SEX").append(" = ''")
+                .append(" AND ").append("BIRTHD").append(" = ''")
+                .append(" AND ").append("RACE").append(" = ''")
+                .append(" AND ").append("OCCU").append(" = ''")
+                .append(" AND ").append("CIVILS").append(" = ''")
+                .append(" AND ").append("DLC").append(" = ''")
+                .append(" AND ").append("STAT").append(" = ''")
+                .append(" AND ").append("DEATHDATE").append(" = ''")
+                .append(" AND ").append("CAUSEOFDEATH").append(" = ''")
+                .append(" AND ").append("AGE").append(" = ").append(-1)
+                .append(" AND ").append("ADDR").append(" = ''")
+                .append(" AND ").append("INCID").append(" = ''")
+                .append(" AND ").append("TOP").append(" = ''")
+                .append(" AND ").append("MOR").append(" = ''")
+                .append(" AND ").append("BEH").append(" = ''")
+                .append(" AND ").append("BAS").append(" = ''")
+                .append(" AND ").append("I10").append(" = ''");
+
 
         try (Statement statement = dbConnection.createStatement();
              ResultSet result = statement.executeQuery(filterStrBuilder.toString());
