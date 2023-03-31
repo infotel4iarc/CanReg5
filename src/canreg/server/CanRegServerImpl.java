@@ -19,6 +19,7 @@
  */
 package canreg.server;
 
+import canreg.client.gui.tools.globalpopup.TechnicalError;
 import canreg.common.*;
 import canreg.common.Globals.UserRightLevels;
 import canreg.common.cachingtableapi.DistributedTableDescription;
@@ -62,10 +63,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.derby.drda.NetworkServerControl;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -175,8 +178,18 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
         // migrate the database if necessary
         Migrator migrator = new Migrator(getCanRegVersion(), currentDAO);
         setTrayIconToolTip("Migrating CanReg5 " + registryCode + " database to newest version specification...");
-        migrator.migrate();
+        try {
+            String path = (isAdHocDB)? Globals.CANREG_SERVER_ADHOC_DB_SYSTEM_DESCRIPTION_FOLDER : Globals.CANREG_SERVER_SYSTEM_CONFIG_FOLDER;
 
+            boolean needReinitialize = migrator.migrate(path + Globals.FILE_SEPARATOR + defaultRegistryCode + ".xml");
+            if (needReinitialize) {
+                initialize(registryCode, isAdHocDB);
+                return;
+            }
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            new TechnicalError().errorDialog(e.getMessage());
+            return;
+        }
         // Step four: initiate the quality controllers
         personSearcher = new DefaultPersonSearch(
                 Tools.getVariableListElements(
