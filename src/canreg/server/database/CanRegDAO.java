@@ -3046,7 +3046,6 @@ public class CanRegDAO {
         return success;
     }
 
-
     public synchronized void deleteEmptyRecords(){
 
         StringBuilder filterStrBuilder = new StringBuilder();
