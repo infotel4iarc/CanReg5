@@ -492,16 +492,18 @@ public class RecordEditorTumour extends javax.swing.JPanel
                     // remove source
                     RecordEditorSource selectedSourceEditor = (RecordEditorSource) sourcesTabbedPane.getSelectedComponent();
                     Source selectedSource = (Source) selectedSourceEditor.getDatabaseRecord();
-                    sources.remove(selectedSource);
-                    sourcesTabbedPane.remove(selectedSourceEditor);
+                    Source clonedSelectedSource = ((Source) selectedSourceEditor.getDatabaseRecord()).clone();
+
+                    // sources.remove(selectedSource); // commented as this will work as copy source for now
+                    // sourcesTabbedPane.remove(selectedSourceEditor); // commented as this will work as copy source for now
 
                     // delete tumourIdsourcetable & tumourSourceId & srid => avoid conflict in DB
-                    selectedSource.setVariable("tumourIdsourcetable", null);
-                    selectedSource.setVariable("sourceRecordId", null);
-                    selectedSource.setVariable("srid",null);
+                    clonedSelectedSource.setVariable("tumourIdsourcetable", null);
+                    clonedSelectedSource.setVariable("sourceRecordId", null);
+                    clonedSelectedSource.setVariable("srid",null);
 
                     // add new source in the selected tumour and refresh sources tabs
-                    targetedTumour.sources.add(selectedSource);
+                    targetedTumour.sources.add(clonedSelectedSource);
                     targetedTumour.setSources(targetedTumour.sources);
                     refreshTitles();
                     
@@ -511,7 +513,7 @@ public class RecordEditorTumour extends javax.swing.JPanel
                     }
 
                     // mark Tumours as changed to get them saved
-                    setSaveNeeded(true);
+                    // setSaveNeeded(true); // commented because saving selected tumour resets all sources
                     targetedTumour.setSaveNeeded(true);
                 }
             }

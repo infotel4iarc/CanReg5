@@ -40,7 +40,7 @@ public class DatabaseRecord implements Serializable //   Commented away to be ab
 // , RecordInterface 
 {
 
-    private final HashMap<String, Object> variables;
+    protected final HashMap<String, Object> variables;
     // private EnumMap<IARCStandardVariableNames, String> map;
     private Translator translator;
     protected String patientIDVariableName;
