@@ -3110,7 +3110,7 @@ public class CanRegDAO {
 
     }
 
-        public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
+    public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
         boolean success = false;
 
         Statement statement = dbConnection.createStatement();
@@ -3118,6 +3118,54 @@ public class CanRegDAO {
         success = true;
 
         return success;
+    }
+
+    /**
+     * Gets all patients from the database and store them in an arrayList of "Patient" objects.
+     * As the Patient object is just a plain Map<String, Object>, its attributes are the Patient
+     * database columns, so the Patient object is filled using these columns as keys for the map.
+     *
+     * @return all patients from the database in an arrayList of "Patient"
+     * @throws SQLException Syntax error as the query couldn't be executed
+     * @throws UnknownTableException the column numbers doesn't match with the number of attributes received
+     * @throws DistributedTableDescriptionException error during the conversion of ResultSet to DistributedTableDataSource
+     */
+    public ArrayList<Patient> getAllPatients() throws SQLException, UnknownTableException, DistributedTableDescriptionException {
+        ArrayList<Patient> patients = new ArrayList<>();
+        PreparedStatement statement = dbConnection.prepareStatement(STR_GET_PATIENTS, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        ResultSet result;
+        try {
+            // get all patients from the database
+            result = statement.executeQuery();
+        } catch (java.sql.SQLSyntaxErrorException ex) {
+            throw ex;
+        }
+        int rowCount;
+        if (result.last()) {
+            rowCount = result.getRow(); // get the row number of the last element as rowCount
+            result.beforeFirst(); // reset the cursor to first element
+            DistributedTableDataSource dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
+            String[] columnNames = dataSource.getTableDescription().getColumnNames();
+            Object[][] rows = dataSource.retrieveRows(0, rowCount); // attribute values of every patient
+            Patient patient;
+
+            for (Object[] patientAttributes : rows) {
+                patient = new Patient();
+                if (patientAttributes.length != columnNames.length) {
+                    LOGGER.log(Level.SEVERE, "database doesn't have the right number of columns");
+                    throw new UnknownTableException("database doesn't have the right number of columns");
+                }
+                for (int i = 0; i < columnNames.length; i++) {
+                    patientAttributes[i] = (patientAttributes[i] == null) ? "" : patientAttributes[i];
+                    patient.setVariable(columnNames[i].toLowerCase(), patientAttributes[i].toString());
+                }
+                patients.add(patient);
+                if (patient.getVariable("FamN").equals("famn_uuid")) {
+                    System.out.println("stop here");
+                }
+            }
+        }
+        return patients;
     }
 
     public boolean setColumnDataType(String columnName, String columnType, String table) throws SQLException {
