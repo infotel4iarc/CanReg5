@@ -226,7 +226,7 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
         Map<String, User> usersMap = currentDAO.getUsers();
         for(User apiUser : usersMap.values()) {
             // TODO: read the RESTAPI role in the configuration, use ANALYST until then 
-            if(apiUser.getUserRightLevel().equals(UserRightLevels.ANALYST)) {
+            if(apiUser.getUserRightLevel().equals(UserRightLevels.API)) {
                 LOGGER.info("Creating holding DB for User: " + apiUser.getUserName());
                 String mainRegistryCode = getCanRegRegistryCode();
                 try {
@@ -1403,6 +1403,11 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
     }
 
     @Override
+    public void deleteEmptyRecords() throws RemoteException {
+        currentDAO.deleteEmptyRecords();
+    }
+
+    @Override
     public int hashCode() {
         return super.hashCode();
     }
@@ -1429,4 +1434,6 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
         }
         return validPassword;
     }
+
+
 }

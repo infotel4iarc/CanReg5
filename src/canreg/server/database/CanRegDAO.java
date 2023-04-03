@@ -2554,7 +2554,7 @@ public class CanRegDAO {
 
     private static final String STR_GET_POPULATION_DATASET_ENTRIES
             = "SELECT * FROM APP.PDSET ";
-
+   
     private static final String STR_DELETE_PATIENT_RECORD
             = "DELETE FROM APP.PATIENT "
             + "WHERE " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " = ?";
@@ -2701,32 +2701,44 @@ public class CanRegDAO {
 
     private DistributedTableDataSource initiatePersonSearchQuery(DatabaseFilter filter, Statement statement) throws SQLException, DistributedTableDescriptionException {
         ResultSet result;
-        String query = "";
-        String rangePart = "";
+        String query; // the sql query
+        String rangePart; // the sql query part where the ID range is set
+        String blockAttributesPart = ""; // the sql query part where the blocked attributes are listed
         int rowCount = -1;
         DistributedTableDataSource dataSource;
+        StringBuilder whereQuery; // the "WHERE" sql query part
+        ArrayList<String> useWhereQueryParts = new ArrayList<>(); // arrayList which contains the different parts of the "WHERE" section
 
+        // This part is used during the global duplicate person search
         if ((filter.getRangeStart() != null && filter.getRangeStart().length() > 0) || (filter.getRangeEnd() != null && filter.getRangeEnd().length() > 0)) {
             rangePart = QueryGenerator.buildRangePart(filter);
             if (rangePart.length() > 0) {
-                rangePart = " WHERE " + rangePart;
+                useWhereQueryParts.add(rangePart);
             }
         }
-
-        query = STR_COUNT_PATIENTS + rangePart;
-        System.out.print(query);
-        ResultSet countRowSet = statement.executeQuery(query);
-        if (countRowSet.next()) {
-            rowCount = countRowSet.getInt(1);
+        // this part is used during a single person duplicate search
+        if ( filter.getFilterString() != null && filter.getFilterString().length() > 0 ) {
+            useWhereQueryParts.add(filter.getFilterString()); //
         }
-        countRowSet = null;
 
-        query = "SELECT " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " FROM APP.PATIENT" + rangePart;
+        whereQuery = new StringBuilder((useWhereQueryParts.size() > 0) ? " WHERE " + useWhereQueryParts.get(0) : "");
+        // normally, useWhereQueryParts size should always be 1
+        for (int i = 1; i < useWhereQueryParts.size(); i++) {
+            whereQuery.append(" AND ").append(useWhereQueryParts.get(i));
+        }
+
+        query = "SELECT " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " FROM APP.PATIENT" + whereQuery;
         try {
             result = statement.executeQuery(query);
         } catch (java.sql.SQLSyntaxErrorException ex) {
             throw ex;
         }
+        // counting rows
+        if (result.last()) {
+            rowCount = result.getRow();
+            result.first();
+        }
+
         if (rowCount > 0) {
             dataSource = new DistributedTableDataSourceResultSetImpl(rowCount, result);
         } else {
@@ -3034,6 +3046,70 @@ public class CanRegDAO {
         return success;
     }
 
+    public synchronized void deleteEmptyRecords(){
+
+        StringBuilder filterStrBuilder = new StringBuilder();
+
+        filterStrBuilder.append(strGetPatientsAndTumours);
+
+        for (DatabaseVariablesListElement e : variables){
+
+            if (e.getStandardVariableName() == null && !e.getTable().equals("Source")){
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ''");
+            }else if (e.getTable().equals("Source") || e.getStandardVariableName().contains("ID")
+                    || e.getStandardVariableName().contains("Patient")
+                    || e.getStandardVariableName().contains("Tumour") || e.getFullName().contains("Source")
+                    || e.getStandardVariableName().contains("MultPrim") || e.getStandardVariableName().contains("Search")){
+                continue;
+            } else if(e.getVariableType().equalsIgnoreCase("Number")){
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ").append(-1);
+            } else if (e.getVariableType().equalsIgnoreCase("Dict") && e.getVariableLength() == 1 && e.getFillInStatus().equalsIgnoreCase("Automatic")) {
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = '0'");
+            } else {
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ''");
+            }
+        }
+
+
+
+        try (Statement statement = dbConnection.createStatement();
+             ResultSet result = statement.executeQuery(filterStrBuilder.toString());
+             ){
+            boolean tumourDeleted;
+            int tumourId;
+            int patientId;
+            String tumourIdSourceTable;
+            Set<Integer> patientIdsToDelete = new HashSet<>();
+
+
+            while (result.next()){
+                tumourDeleted = false;
+                patientId = result.getInt(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
+                tumourId = result.getInt(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
+                tumourIdSourceTable = result.getString(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME_FOR_HOLDING);
+
+                deleteSources(tumourIdSourceTable);
+                tumourDeleted = deleteTumourRecord(tumourId);
+                if(tumourDeleted) {
+                    patientIdsToDelete.add(patientId);
+                }
+            }
+            for (int id : patientIdsToDelete){
+                deletePatientRecord(id);
+
+            }
+        } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, String.format("Exception in : %s", filterStrBuilder.toString()), e);
+        } catch (RecordLockedException e) {
+            throw new RuntimeException(e);
+        } catch (UnknownTableException e) {
+            throw new RuntimeException(e);
+        } catch (DistributedTableDescriptionException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {
         boolean success = false;
 
@@ -3107,7 +3183,7 @@ public class CanRegDAO {
 
         Statement statement = dbConnection.createStatement();
         statement.execute(QueryGenerator.strDropColumnFromTable(columnName, table));
-        success = true;
+            success = true;
 
         return success;
     }

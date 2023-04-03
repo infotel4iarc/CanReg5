@@ -1178,6 +1178,17 @@ public class CanRegClientApp extends SingleFrameApplication {
         }
     }
 
+    public void deleteEmptyRecords(CanRegServerInterface server){
+        if (server == null){
+            server = this.mainServer;
+        }
+        try {
+            server.deleteEmptyRecords();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private synchronized boolean isRecordLocked(int recordID, String tableName) {
         boolean lock = false;
         Set lockSet = locksMap.get(tableName);

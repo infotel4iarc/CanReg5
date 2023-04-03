@@ -143,9 +143,10 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         initOtherComponents();
         initValues();
         
-        if(this.server == null)
+        if(this.server == null) {
             this.holdingOptions.setVisible(false);
-        
+        }
+
         pack();
     }
     ///
@@ -176,6 +177,7 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         selectAllChkBox = new javax.swing.JCheckBox();
         productionBtn = new javax.swing.JButton();
         deleteHoldingBtn = new javax.swing.JButton();
+
 
         setClosable(true);
         setMaximizable(true);
@@ -254,6 +256,8 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
         editTumourNumberButton.setText(resourceMap.getString("editTumourNumberButton.text")); // NOI18N
         editTumourNumberButton.setName("editTumourNumberButton"); // NOI18N
 
+
+
         javax.swing.GroupLayout buttonsPanelLayout = new javax.swing.GroupLayout(buttonsPanel);
         buttonsPanel.setLayout(buttonsPanelLayout);
         buttonsPanelLayout.setHorizontalGroup(
@@ -264,6 +268,7 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
             .addComponent(patientNumberTextField, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(editTumourNumberButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(tumourNumberTextField)
+
         );
         buttonsPanelLayout.setVerticalGroup(
             buttonsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -279,7 +284,8 @@ public class BrowseInternalFrame extends javax.swing.JInternalFrame implements A
                 .addComponent(editTumourNumberButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tumourNumberTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(73, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         rangeFilterPanel.setName("rangeFilterPanel"); // NOI18N
@@ -506,6 +512,8 @@ private void tumourNumberTextFieldMousePressed(java.awt.event.MouseEvent evt) {/
         else 
             resultTable.clearSelection();
     }//GEN-LAST:event_selectAllChkBoxActionPerformed
+
+
 
     private void rowClicked(java.awt.event.MouseEvent evt) {
         String referenceTable;
