@@ -3034,31 +3034,31 @@ public class CanRegDAO {
         return success;
     }
 
+
     public synchronized void deleteEmptyRecords(){
 
         StringBuilder filterStrBuilder = new StringBuilder();
-        filterStrBuilder.append(strGetPatientsAndTumours)
-                .append(" AND ").append("FAMN").append(" = ''")
-                .append(" AND ").append("MIDN").append(" = ''")
-                .append(" AND ").append("MAIDN").append(" = ''")
-                .append(" AND ").append("FIRSTN").append(" = ''")
-                .append(" AND ").append("SEX").append(" = ''")
-                .append(" AND ").append("BIRTHD").append(" = ''")
-                .append(" AND ").append("RACE").append(" = ''")
-                .append(" AND ").append("OCCU").append(" = ''")
-                .append(" AND ").append("CIVILS").append(" = ''")
-                .append(" AND ").append("DLC").append(" = ''")
-                .append(" AND ").append("STAT").append(" = ''")
-                .append(" AND ").append("DEATHDATE").append(" = ''")
-                .append(" AND ").append("CAUSEOFDEATH").append(" = ''")
-                .append(" AND ").append("AGE").append(" = ").append(-1)
-                .append(" AND ").append("ADDR").append(" = ''")
-                .append(" AND ").append("INCID").append(" = ''")
-                .append(" AND ").append("TOP").append(" = ''")
-                .append(" AND ").append("MOR").append(" = ''")
-                .append(" AND ").append("BEH").append(" = ''")
-                .append(" AND ").append("BAS").append(" = ''")
-                .append(" AND ").append("I10").append(" = ''");
+
+        filterStrBuilder.append(strGetPatientsAndTumours);
+
+        for (DatabaseVariablesListElement e : variables){
+
+            if (e.getStandardVariableName() == null && !e.getTable().equals("Source")){
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ''");
+            }else if (e.getTable().equals("Source") || e.getStandardVariableName().contains("ID")
+                    || e.getStandardVariableName().contains("Patient")
+                    || e.getStandardVariableName().contains("Tumour") || e.getFullName().contains("Source")
+                    || e.getStandardVariableName().contains("MultPrim") || e.getStandardVariableName().contains("Search")){
+                continue;
+            } else if(e.getVariableType().equalsIgnoreCase("Number")){
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ").append(-1);
+            } else if (e.getVariableType().equalsIgnoreCase("Dict") && e.getVariableLength() == 1 && e.getFillInStatus().equalsIgnoreCase("Automatic")) {
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = '0'");
+            } else {
+                filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ''");
+            }
+        }
+
 
 
         try (Statement statement = dbConnection.createStatement();
