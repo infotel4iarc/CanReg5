@@ -1403,8 +1403,8 @@ public class CanRegServerImpl extends UnicastRemoteObject implements CanRegServe
     }
 
     @Override
-    public void deleteEmptyRecords() throws RemoteException {
-        currentDAO.deleteEmptyRecords();
+    public int[] deleteEmptyRecords() throws RecordLockedException, RuntimeException {
+        return currentDAO.deleteEmptyRecords();
     }
 
     @Override

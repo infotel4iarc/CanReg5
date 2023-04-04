@@ -770,7 +770,6 @@ public class CanRegClientApp extends SingleFrameApplication {
     /**
      *
      * @param task
-     * @param doc
      * @param map
      * @param files
      * @param io
@@ -1178,12 +1177,12 @@ public class CanRegClientApp extends SingleFrameApplication {
         }
     }
 
-    public void deleteEmptyRecords(CanRegServerInterface server){
+    public int[] deleteEmptyRecords(CanRegServerInterface server) throws RecordLockedException, RuntimeException{
         if (server == null){
             server = this.mainServer;
         }
         try {
-            server.deleteEmptyRecords();
+            return server.deleteEmptyRecords();
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }

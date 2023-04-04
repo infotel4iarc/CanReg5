@@ -2554,7 +2554,7 @@ public class CanRegDAO {
 
     private static final String STR_GET_POPULATION_DATASET_ENTRIES
             = "SELECT * FROM APP.PDSET ";
-   
+
     private static final String STR_DELETE_PATIENT_RECORD
             = "DELETE FROM APP.PATIENT "
             + "WHERE " + Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME + " = ?";
@@ -3046,22 +3046,26 @@ public class CanRegDAO {
         return success;
     }
 
-    public synchronized void deleteEmptyRecords(){
-
+    /**
+     * removes empty lines from the database
+     *
+     * @return an array of int [number of patients deleted, number of tumours deleted]. Returns [] if a problem occurred
+     * @throws "Exception Locked record" if at least one record was locked
+     */
+    public synchronized int[] deleteEmptyRecords() throws RecordLockedException, RuntimeException {
         StringBuilder filterStrBuilder = new StringBuilder();
-
         filterStrBuilder.append(strGetPatientsAndTumours);
 
-        for (DatabaseVariablesListElement e : variables){
+        for (DatabaseVariablesListElement e : variables) {
 
-            if (e.getStandardVariableName() == null && !e.getTable().equals("Source")){
+            if (e.getStandardVariableName() == null && !e.getTable().equals("Source")) {
                 filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ''");
-            }else if (e.getTable().equals("Source") || e.getStandardVariableName().contains("ID")
+            } else if (e.getTable().equals("Source") || e.getStandardVariableName().contains("ID")
                     || e.getStandardVariableName().contains("Patient")
                     || e.getStandardVariableName().contains("Tumour") || e.getFullName().contains("Source")
-                    || e.getStandardVariableName().contains("MultPrim") || e.getStandardVariableName().contains("Search")){
+                    || e.getStandardVariableName().contains("MultPrim") || e.getStandardVariableName().contains("Search")) {
                 continue;
-            } else if(e.getVariableType().equalsIgnoreCase("Number")){
+            } else if (e.getVariableType().equalsIgnoreCase("Number")) {
                 filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = ").append(-1);
             } else if (e.getVariableType().equalsIgnoreCase("Dict") && e.getVariableLength() == 1 && e.getFillInStatus().equalsIgnoreCase("Automatic")) {
                 filterStrBuilder.append(" AND ").append(e.getShortName()).append(" = '0'");
@@ -3070,44 +3074,40 @@ public class CanRegDAO {
             }
         }
 
-
-
         try (Statement statement = dbConnection.createStatement();
              ResultSet result = statement.executeQuery(filterStrBuilder.toString());
-             ){
+        ) {
             boolean tumourDeleted;
             int tumourId;
             int patientId;
             String tumourIdSourceTable;
             Set<Integer> patientIdsToDelete = new HashSet<>();
+            int deleteTumourCount = 0;
 
-
-            while (result.next()){
-                tumourDeleted = false;
+            while (result.next()) {
                 patientId = result.getInt(Globals.PATIENT_TABLE_RECORD_ID_VARIABLE_NAME);
                 tumourId = result.getInt(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME);
                 tumourIdSourceTable = result.getString(Globals.TUMOUR_TABLE_RECORD_ID_VARIABLE_NAME_FOR_HOLDING);
 
                 deleteSources(tumourIdSourceTable);
                 tumourDeleted = deleteTumourRecord(tumourId);
-                if(tumourDeleted) {
+                if (tumourDeleted) {
                     patientIdsToDelete.add(patientId);
+                    deleteTumourCount++;
                 }
             }
-            for (int id : patientIdsToDelete){
+            for (int id : patientIdsToDelete) {
                 deletePatientRecord(id);
-
             }
+            return new int[]{patientIdsToDelete.size(), deleteTumourCount};
         } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, String.format("Exception in : %s", filterStrBuilder.toString()), e);
+            LOGGER.log(Level.SEVERE, String.format("Exception in : %s", filterStrBuilder.toString()), e);
         } catch (RecordLockedException e) {
-            throw new RuntimeException(e);
-        } catch (UnknownTableException e) {
-            throw new RuntimeException(e);
-        } catch (DistributedTableDescriptionException e) {
+            throw e;
+        } catch (UnknownTableException | DistributedTableDescriptionException e) {
             throw new RuntimeException(e);
         }
-
+        return new int[0];
     }
 
     public boolean addColumnToTable(String columnName, String columnType, String table) throws SQLException {

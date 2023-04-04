@@ -103,10 +103,8 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
      * connects to holding database.
      * This new instance will have the same RMI client connection as the singleton-ish
      * instance that you have acquired through getInstance().
-     * @param originalRegistryCode
      * @param holdingRegistryCode
-     * @param registryCode
-     * @return 
+     * @return
      */
     public CanRegRegistryProxy getInstanceForHoldingDB(String holdingRegistryCode)
             throws RemoteException {
@@ -607,8 +605,8 @@ public class CanRegRegistryProxy implements CanRegServerInterface, Serializable 
     }
 
     @Override
-    public void deleteEmptyRecords() throws RemoteException {
-        serverProxy.deleteEmptyRecords();
+    public int[] deleteEmptyRecords() throws RecordLockedException, RuntimeException, RemoteException {
+        return serverProxy.deleteEmptyRecords();
     }
 
     @Override

@@ -492,9 +492,9 @@ class CanRegServerProxy extends UnicastRemoteObject implements CanRegServerInter
     }
 
     @Override
-    public void deleteEmptyRecords() {
+    public int[] deleteEmptyRecords() throws RecordLockedException, RuntimeException{
         try {
-            theServer.deleteEmptyRecords();
+            return theServer.deleteEmptyRecords();
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
